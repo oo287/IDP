@@ -32,13 +32,7 @@ void follow_line() {                                             // Function tha
     motor2_output = motor_output_high;
     motor4_output = motor_output_high;
   }
-  else if (line4_bool and not line1_bool) {                      // Line is to the right, robot too far left
-    motor1_output = motor_output_high;                           // Motor outputs corresponding to turn right slightly
-    motor3_output = motor_output_high;
-    motor2_output = motor_output_low;
-    motor4_output = motor_output_low;
-  }
-  // Add more conditions here
+  else if (line4_bool and not line1_bool)                        // Line is to the right, robot too far left
 }
 
 // --------- Setup Function ---------                            // --------- Setup Function ---------
@@ -49,5 +43,4 @@ void setup() {                                                   // Function tha
 
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
 void loop() {                                                    // Function that runs repeatedly whilst the robot is on
-  follow_line();
 }
