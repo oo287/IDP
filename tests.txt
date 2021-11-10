@@ -1,0 +1,4 @@
+Tests that the Robot has been programmed to run (loosely correspond to milestones)
+1) Spin the wheels
+2+3) Move forwards ~1m and flash the orange LED. Can be used for moving over ramp test too
+4) Turn 360 clockwise, anticlockwise, reverse ~1m
