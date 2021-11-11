@@ -54,6 +54,12 @@ void follow_line() {                                             // Function tha
   }
 }
 
+void search_for_dummies(){
+    drive_motor(right_motor_port, 100, false);                  // spin to the left
+    drive_motor(left_motor_port, 100, true);
+    signal_strength = 0 // Continue here
+}
+
 // --------- Setup Function ---------                            // --------- Setup Function ---------
 void setup() {                                                   // Function that runs on power-up/RESET
   Serial.begin(9600);                                            // Start Serial to print debug info
