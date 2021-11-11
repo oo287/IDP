@@ -12,16 +12,6 @@ byte no_dummies_rescued = 0;                                     // Number of du
 
 byte left_motor_output, right_motor_output;                      // Voltage/Current/Whatever for controlling the speed/torque of each wheel motor. 1 = Front left, 2 = Front right, 3 = Back left, 4 = Back right
 
-float line1_value, line2_value, line3_value, line4_value;        // Value of line sensor outputs (between 0 and 1023)
-bool line1_bool, line2_bool, line3_bool, line4_bool;             // Booleans that represent if the line sensor IS over the line (calculated from lineN_value variables)
-
-float dummy_dist = -1;                                           // Distance to dummy being tracked. -1 if carrying a dummy or not tracking a dummy
-
-const int motor_output_high      = 100;                          // Value that represents the maximum motor output
-const int motor_output_low       = 60;                           // Motor output value used for turning
-const int motor_output_rev_high  = -100;                         // Motor output value used for reversing (straight)
-const int motor_output_rev_low   = -60;                          // Motor output value used for reversing and turning
-
 const byte left_motor_port =  1;                                 // Port of the motor shield that the left motor uses
 const byte right_motor_port = 2;                                 // Port of the motor shield that the right motor uses
 
@@ -36,7 +26,7 @@ void drive_motor(int motor, int spd, bool rev) {                 // Electrical f
 }
 
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
-  
+  // To Do
 }
 
 // --------- Setup Function ---------                            // --------- Setup Function ---------
