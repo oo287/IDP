@@ -12,7 +12,7 @@ byte no_dummies_rescued = 0;                                     // Number of du
 
 byte left_motor_output, right_motor_output;                      // Voltage/Current/Whatever for controlling the speed/torque of each wheel motor. 1 = Front left, 2 = Front right, 3 = Back left, 4 = Back right
 
-int line_detector_1, line_detector_2, line_detector_3;           // output of line detector (0-1023) 1 LHS 2 middle 3 RHS
+int line_detector_1, line_detector_2, line_detector_3             // output of line detector (0-1023) 1 LHS 2 middle 3 RHS
 
 const byte left_motor_port =  3;                                 // Port of the motor shield that the left motor uses
 const byte right_motor_port = 4;                                 // Port of the motor shield that the right motor uses
@@ -28,29 +28,25 @@ void drive_motor(int motor, int spd, bool rev) {                 // Electrical f
 }
 
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
-  if ((line_detector_2 > 500) and (line_detector_1 < 500) and (line_detector_3 < 500)){ //default on the line go straight ahead case
-    drive_motor(left_motor_port, 250, false);
-    drive_motor(right_motor_port, 250, false);
+  if (line_detector_2 > 500) AND (line_detector_1 < 500) AND (line_detector_3 < 500){ //default on the line go straight ahead case
+    drive_motor(left_motor_port, 250, FALSE);
+    drive_motor(right_motor_port, 250, FALSE);
   }
-  else if ((line_detector_2 < 500) and (line_detector_1 < 500) and (line_detector_3 < 500)){ //central detector off line but niether side on line yet but carry on straight
-    drive_motor(left_motor_port, 200, false);
-    drive_motor(right_motor_port, 200, false);
+  else if (line_detector_2 < 500) AND (line_detector_1 < 500) AND (line_detector_3 < 500){ //central detector off line but niether side on line yet but carry on straight
+    drive_motor(left_motor_port, 200, FALSE);
+    drive_motor(right_motor_port, 200, FALSE);
   }
-  else if ((line_detector_2 < 500) and (line_detector_1 > 500) and (line_detector_3 < 500)){ //hit line on LHS so steering RIGHT
-    drive_motor(left_motor_port, 250, false);
-    drive_motor(right_motor_port, 200, false);
+  else if (line_detector_2 < 500) AND (line_detector_1 > 500) AND (line_detector_3 < 500){ //hit line on LHS so steering RIGHT
+    drive_motor(left_motor_port, 250, FALSE);
+    drive_motor(right_motor_port, 200, FALSE);
   }
-  else if ((line_detector_2 < 500) and (line_detector_1 > 500) and (line_detector_3 < 500)){ //hit line on RHS so steering LEFT
-    drive_motor(left_motor_port, 200, false);
-    drive_motor(right_motor_port, 250, false);
-  }
-  else if ((line_detector_2 > 500) and (line_detector_1 > 500) and (line_detector_3 > 500)){ //hit horizontal line
-    drive_motor(left_motor_port, 0, false);
-    drive_motor(right_motor_port, 0, false);
+  else if (line_detector_2 < 500) AND (line_detector_1 > 500) AND (line_detector_3 < 500){ //hit line on RHS so steering LEFT
+    drive_motor(left_motor_port, 200, FALSE);
+    drive_motor(right_motor_port, 250, FALSE);
   }
   else{ //some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
-    drive_motor(right_motor_port, 100, false);
-    drive_motor(left_motor_port, 100, true);
+    drive_motor(right_motor_port, 100, FALSE);
+    drive_motor(left_motor_port, 100, TRUE);
   }
 }
 
