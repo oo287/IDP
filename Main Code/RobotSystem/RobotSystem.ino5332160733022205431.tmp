@@ -48,22 +48,10 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
   } 
 }
 
-int take_IR_sensor_reading() {                                   // Electrical function that returns an integer corresponding to the magnitude of the peaks of the IR input from the sensor
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE)
- 
-}
-
-byte take_line_sensor_reading(byte line_sensor_number = 0) {     // Electrical function that returns an integer (byte) for what colour the line below is (0=Black,1=White,2=Blue,3=Red) (0=Left,1=Center,2=Right sensor)
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE) 
-  
-}
-
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
-  if ((line_detector_2 > 500) and (line_detector_1 < 500) and    // Default on the line, go straight ahead case
-  (line_detector_3 < 500)){ 
+                                                                 // Default on the line, go straight ahead case
+  if ((line_detector_2 > 500) and (line_detector_1 < 500) and (line_detector_3 < 500)){ 
     drive_motor(left_motor_port, 250, false);
     drive_motor(right_motor_port, 250, false);
   }                                                              // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
@@ -78,18 +66,18 @@ void follow_line() {                                             // Function tha
   else if ((line_detector_2 < 500) and (line_detector_1 > 500) and (line_detector_3 < 500)){ 
     drive_motor(left_motor_port, 200, false);
     drive_motor(right_motor_port, 250, false);
-  }                                                              // Hit horizontal line (STOP)
-  else if ((line_detector_2 > 500) and (line_detector_1 > 500) and (line_detector_3 > 500)){ 
+  }
+  else if ((line_detector_2 > 500) and (line_detector_1 > 500) and (line_detector_3 > 500)){ //hit horizontal line
     drive_motor(left_motor_port, 0, false);
     drive_motor(right_motor_port, 0, false);
   }
-  else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
+  else{ //some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
     drive_motor(right_motor_port, 100, false);
     drive_motor(left_motor_port, 100, true);
   }
 }
 
-bool point_towards_nearest_dummy(bool clockwise=true){           // Function to: Stop, spin on the spot, turn towards first dummy seen (moving in the direction given)
+void point_towards_nearest_dummy(){
 
   drive_motor(left_motor_port, 0, true);                         // Stop driving to prepare for turning around
   drive_motor(right_motor_port, 0, false);
@@ -105,7 +93,7 @@ bool point_towards_nearest_dummy(bool clockwise=true){           // Function to:
   if (IR_sensor_magnitude < min_IR_sensor_magnitude) {           // If new min found...
     min_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set min to current value
   }
-  // UNFINISHED (OLLIE)
+  
 }
 
 // --------- Setup Function ---------                            // --------- Setup Function ---------
@@ -126,7 +114,7 @@ void setup() {                                                   // Function tha
   left_motor->run(FORWARD);
   left_motor->run(RELEASE); 
 
-  right_motor->setSpeed(0);                                      // Initialise right motor
+  right_motor->setSpeed(0);                                       // Initialise right motor
   right_motor->run(FORWARD);
   right_motor->run(RELEASE); 
 }
@@ -134,37 +122,36 @@ void setup() {                                                   // Function tha
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
 void loop() {                                                    // Function that runs repeatedly whilst the robot is on
   if (robot_test_state == 1) {                                   // Test 1: Spin the wheels without control of any kind
-    if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
-      drive_motor(left_motor,255,false);                         // Use the electrical function to spin each motor at max speed
+    if (tick_counter*tick_length > 3000) {                       // Wait 3 seconds before beginning test
+      drive_motor(left_motor,255,false);                                    // Use the electrical function to spin each motor at max speed
       drive_motor(right_motor,255,false);
     }
   }
-  else if (robot_test_state == 2 or robot_test_state == 3) {     // Test 2/3: Drive forwards for a fixed time (to give ~1m forwards)
+  else if (robot_test_state == 2 or robot_test_state == 3) {        // Test 2/3: Drive forwards for a fixed time (to give ~1m forwards)
     if (tick_counter*tick_length > 7000) {                       // Drive for [2] seconds
-      drive_motor(left_motor,0,false);                           // Stop motors after test complete
+      drive_motor(left_motor,0,false);                                    // Stop motors after test complete
       drive_motor(right_motor,0,false);
     }
     else if (tick_counter*tick_length > 3000) {                  // Wait [3] seconds before beginning test
-      drive_motor(left_motor,255,false);                         // Drive both motors forwards at full speed
+      drive_motor(left_motor,255,false);                                  // Drive both motors forwards at full speed
       drive_motor(right_motor,255,false);
     }
   }
-  else if (robot_test_state == 4) {                              // Test 4: 360
-    if (tick_counter*tick_length > 11000) {                      // Stop motors after test complete
-      drive_motor(left_motor,0,true);                                    
+  else if (robot_test_state == 4) {
+    if (tick_counter*tick_length > 11000) {                       // Drive for [2] seconds
+      drive_motor(left_motor,0,true);                                    // Stop motors after test complete
       drive_motor(right_motor,0,true);
     }
-    else if (tick_counter*tick_length > 9000) {                  // Reverse for [2] seconds
-      drive_motor(left_motor,255,true);                                    
+    else if (tick_counter*tick_length > 9000) {                       // Drive for [2] seconds
+      drive_motor(left_motor,255,true);                                    // Stop motors after test complete
       drive_motor(right_motor,255,true);
     }
-    else if (tick_counter*tick_length > 6000) {                  // Spin Counter-clockwise, slowing down to 0 at the end of the 3-second turn
-      drive_motor(left_motor,255-255*(tick_counter*tick_length-6000)/3000,true);                                  
+    else if (tick_counter*tick_length > 6000) {                  // Wait [3] seconds before beginning test
+      drive_motor(left_motor,255-255*(tick_counter*tick_length-6000)/3000,true);                                  // Drive both motors forwards at full speed
       drive_motor(right_motor,255-255*(tick_counter*tick_length-6000)/3000,false);
     }
     else if (tick_counter*tick_length > 3000) {                  // Wait [3] seconds before beginning test
-                                                                 // Spin Clockwise, slowing down to 0 at the end of the 3-second turn
-      drive_motor(left_motor,255-255*(tick_counter*tick_length-3000)/3000,false);                                  
+      drive_motor(left_motor,255-255*(tick_counter*tick_length-3000)/3000,false);                                  // Drive both motors forwards at full speed
       drive_motor(right_motor,255-255*(tick_counter*tick_length-3000)/3000,true);
     }
   }

@@ -48,18 +48,6 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
   } 
 }
 
-int take_IR_sensor_reading() {                                   // Electrical function that returns an integer corresponding to the magnitude of the peaks of the IR input from the sensor
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE)
- 
-}
-
-byte take_line_sensor_reading(byte line_sensor_number = 0) {     // Electrical function that returns an integer (byte) for what colour the line below is (0=Black,1=White,2=Blue,3=Red) (0=Left,1=Center,2=Right sensor)
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE) 
-  
-}
-
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
   if ((line_detector_2 > 500) and (line_detector_1 < 500) and    // Default on the line, go straight ahead case
@@ -89,7 +77,7 @@ void follow_line() {                                             // Function tha
   }
 }
 
-bool point_towards_nearest_dummy(bool clockwise=true){           // Function to: Stop, spin on the spot, turn towards first dummy seen (moving in the direction given)
+void point_towards_nearest_dummy(){
 
   drive_motor(left_motor_port, 0, true);                         // Stop driving to prepare for turning around
   drive_motor(right_motor_port, 0, false);
@@ -105,7 +93,7 @@ bool point_towards_nearest_dummy(bool clockwise=true){           // Function to:
   if (IR_sensor_magnitude < min_IR_sensor_magnitude) {           // If new min found...
     min_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set min to current value
   }
-  // UNFINISHED (OLLIE)
+  
 }
 
 // --------- Setup Function ---------                            // --------- Setup Function ---------
