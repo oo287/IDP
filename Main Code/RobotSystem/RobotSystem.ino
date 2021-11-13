@@ -15,7 +15,7 @@ int max_IR_sensor_magnitude;                                     // Maximum valu
 int min_IR_sensor_magnitude;                                     // Minimum value of IR recorded throughout a rotation (used to distinguish between the dummy and background noise)
 
 const byte left_motor_port =  3;                                 // Motor shield port that the left motor uses
-const byte right_motor_port = 4;                                 // Motor shield portthat the right motor uses
+const byte right_motor_port = 4;                                 // Motor shield port that the right motor uses
 
 const byte LED1_PIN = 6;                                         // Pin used for Orange LED (LED1)
 
@@ -62,8 +62,8 @@ byte take_line_sensor_reading(byte line_sensor_number = 0) {     // Electrical f
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
-  if ((line_detector_2 > 500) and (line_detector_1 < 500) and    // Default on the line, go straight ahead case
-  (line_detector_3 < 500)){ 
+                                                                 // Default on the line, go straight ahead case
+  if ((line_detector_2 > 500) and (line_detector_1 < 500) and (line_detector_3 < 500)){    
     drive_motor(left_motor_port, 255, false);
     drive_motor(right_motor_port, 255, false);
   }                                                              // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
