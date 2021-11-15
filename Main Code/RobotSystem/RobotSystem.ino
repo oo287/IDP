@@ -4,14 +4,16 @@
 // --------- Variables ---------                                 // --------- Variables ---------
 unsigned byte robot_test_state = 4;                              // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
-unsigned const int tick_length = 5;                              // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
+unsigned const int tick_length = 5;                             // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
+unsigned long time_when_i_say_so =0
 
 byte robot_state = 0;                                            // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 
-bool line_detector_1, line_detector_2, line_detector_3;          // Output of line detector (0,1) 1 LHS 2 middle 3 RHS
+bool line_detector_1, line_detector_2, line_detector_3
 int IR_sensor_magnitude;                                         // Output magnitude of IR sensor (for locating dummies)
 int max_IR_sensor_magnitude;                                     // Maximum value of IR recorded throughout a rotation
 int min_IR_sensor_magnitude;                                     // Minimum value of IR recorded throughout a rotation (used to distinguish between the dummy and background noise)
+int what_dummy_am_I                                              // the dummy that is detected (0 for line, 1 for red box, 2 for blue box)
 
 const byte left_motor_port =  3;                                 // Motor shield port that the left motor uses
 const byte right_motor_port = 4;                                 // Motor shield port that the right motor uses
@@ -66,11 +68,8 @@ int take_ultrasonic_reading() {
 }
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
-bool follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
-  line_detector_1 = take_line_sensor_reading(0)                    // initiate line sensor variable (1=L 2=m 3=R)
-  line_detector_2 = take_line_sensor_reading(1)
-  line_detector_3 = take_line_sensor_reading(2)
-
+bool follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
+  take_line_sensor_reading()
                                                                  // Default on the line, go straight ahead case
   if ((line_detector_2 == true) and (line_detector_1 == false and (line_detector_3 == false)){    
     drive_motor(left_motor_port, 255, false);
@@ -97,6 +96,7 @@ bool follow_line() {                                             // Function tha
     drive_motor(right_motor_port, 100, false);
     drive_motor(left_motor_port, 100, true);
   }
+  return false
 }
 
 bool point_towards_nearest_dummy(bool clockwise=true){           // Function to: Stop, spin on the spot, turn towards first dummy seen (moving in the direction given)
@@ -128,6 +128,9 @@ bool pick_up_dummy(){
 
 void drop_off_dummy(){
   // write this when claw built
+}
+void approach_identify_grab(){
+
 }
 // --------- Setup Function ---------                            // --------- Setup Function ---------
 void setup() {                                                   // Function that runs on power-up/RESET
@@ -189,7 +192,7 @@ void loop() {                                                    // Function tha
       drive_motor(right_motor,255-255*(tick_counter*tick_length-3000)/3000,true);
     }
   }
-  else if (tick_length * tick_counter > 3000):                                                           // main program
+  else if (tick_length * tick_counter > 3000):                    // main program
 
     if (robot_state == 0){                                        // starting sequence -> pick up first dummy
       if ((take_ultrasonic_reading() > 5) and (take_ir_reading() < 1024)){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
@@ -198,23 +201,45 @@ void loop() {                                                    // Function tha
       else{
         drive_motor(left_motor,0,true);                                    
         drive_motor(right_motor,0,true);
-        delay(5000);
-        identify_dummy()
-        pick_up_dummy();
-      robot_state = 1
+        if (time_when_i_say_so == 0){
+          time_when_i_say_so = tick_counter*tick_length;
+        }
+        if (tick_length * tick_counter > time_when_i_say_so + 5000){
+          which_dummy_am_I = identify_dummy();
+          pick_up_dummy();
+        }
+        if (pick_up_dummy() == true){
+          time_when_i_say_so = 0;
+          robot_state = 1;
+        }
       }
     
     }
-    if ((robot_state == 1) and (pick_up_dummy() == true)){      //picked up first dummy and drop it off
-      while(follow_line() == false){
-        follow_line()
+  
+    if (robot_state == 1){      //picked up first dummy and drop it off
+      if (follow_line() == false){
+        follow_line();
       }
-      drop_off_dummy()
-      robot_state = 2
+      drop_off_dummy();
+      if (time_when_i_say_so == 0){
+        time_when_i_say_so = tick_counter * tick_length;
+      }
+      if (tick_counter * tick_length < time_when_i_say_so + 1000){
+        drive_motor(left_motor,255,true);
+        drive_motor(right_motor,255,true);
+      }
+      else{
+        robot_state = 2;
+      }
     }
-    if (robot_state == 2)                                       //find 2nd dummy
-      point_towards_nearest_dummy()
-
+    
+    if (robot_state == 2){                                       //find 2nd dummy
+      point_towards_nearest_dummy();
+      if ((take_ultrasonic_reading() > 5) and (take_ir_reading() < 1024)){                        // this should drive us to the dummy
+        drive_motor(left_motor,255,false);
+        drive_motor(right_motor,255,false);
+      }
+    }
 
 
   tick_counter ++;                                               // Increment tick counter
