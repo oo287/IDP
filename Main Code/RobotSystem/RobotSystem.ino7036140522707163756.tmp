@@ -108,7 +108,7 @@ void take_line_sensor_readings() {
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 bool follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
-  take_line_sensor_readings();
+  take_line_sensor_readings()
                                                                  // Default on the line, go straight ahead case
   if ((line_detector_2 == true) and (line_detector_1 == false) and (line_detector_3 == false)){    
     drive_motor(left_motor_port, 255, false);
