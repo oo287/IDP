@@ -54,7 +54,7 @@ int take_IR_sensor_reading() {                                   // Electrical f
  
 }
 
-bool take_line_sensor_reading(byte line_sensor_number = 0) {     // Electrical function that returns an integer (byte) for what colour the line below is (true=white,false=black) (0=Left,1=Center,2=Right sensor)
+byte take_line_sensor_reading(byte line_sensor_number = 0) {     // Electrical function that returns an integer (byte) for what colour the line below is (0=Black,1=White,2=Blue,3=Red) (0=Left,1=Center,2=Right sensor)
 
   // ELECTRICAL WRITE THIS FUNCTION (PLEASE) 
   
