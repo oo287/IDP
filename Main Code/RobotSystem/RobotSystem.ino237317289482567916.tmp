@@ -2,7 +2,7 @@
 #include <Adafruit_MotorShield.h>                                // Import motor shield library
 
 // --------- Variables ---------                                 // --------- Variables ---------
-byte robot_test_state = 5;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+byte robot_test_state = 5;                              // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
 unsigned const int tick_length = 5;                              // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
 unsigned long time_when_i_say_so = 0;
@@ -18,10 +18,10 @@ int what_dummy_am_I;                                             // The dummy th
 const byte left_motor_port =  3;                                 // Motor shield port that the left motor uses
 const byte right_motor_port = 4;                                 // Motor shield port that the right motor uses
 
-const byte LED1_PIN = 6;                                         // Pin used for Orange LED (LED1)
-const byte LS1_PIN = 2;                                          // Pins used for Line Sensors (LS) 1, 2 and 3
+const byte LED1_PIN = 8;                                         // Pin used for Orange LED (LED1)
+const byte LS1_PIN = 0;                                          // Pins used for Line Sensors (LS) 1, 2 and 3
 const byte LS2_PIN = 1;
-const byte LS3_PIN = 0;
+const byte LS3_PIN = 2;
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();              // Create motorshield object called 'AFMS' with default I2C address. Put I2C address in brackets if different address needed
@@ -84,8 +84,6 @@ void take_line_sensor_readings() {
   else {
     line_detector_3 = false;
   }
-
-  Serial.println(line_detector_1);
 //  
 //  if (digitalRead(LS1_PIN)==1) {
 //    line_detector_1 = true;
