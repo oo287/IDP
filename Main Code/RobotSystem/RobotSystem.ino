@@ -13,12 +13,15 @@ bool line_detector_1, line_detector_2, line_detector_3
 int IR_sensor_magnitude;                                         // Output magnitude of IR sensor (for locating dummies)
 int max_IR_sensor_magnitude;                                     // Maximum value of IR recorded throughout a rotation
 int min_IR_sensor_magnitude;                                     // Minimum value of IR recorded throughout a rotation (used to distinguish between the dummy and background noise)
-int what_dummy_am_I                                              // the dummy that is detected (0 for line, 1 for red box, 2 for blue box)
+int what_dummy_am_I;                                             // The dummy that is detected (0 for line, 1 for red box, 2 for blue box)
 
 const byte left_motor_port =  3;                                 // Motor shield port that the left motor uses
 const byte right_motor_port = 4;                                 // Motor shield port that the right motor uses
 
-const byte LED1_PIN = 6;                                         // Pin used for Orange LED (LED1)
+const byte LED1_PIN = 8;                                         // Pin used for Orange LED (LED1)
+const byte LS1_PIN = 5;                                          // Pins used for Line Sensors (LS) 1, 2 and 3
+const byte LS2_PIN = 6;
+const byte LS3_PIN = 7;
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();              // Create motorshield object called 'AFMS' with default I2C address. Put I2C address in brackets if different address needed
@@ -49,16 +52,45 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
   } 
 }
 
-int take_IR_sensor_reading() {                                   // Electrical function that returns an integer corresponding to the magnitude of the peaks of the IR input from the sensor
+void take_IR_sensor_readings() {                                   // Electrical function that returns an integer corresponding to the magnitude of the peaks of the IR input from the sensor
 
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE)
- 
-}
-
-bool take_line_sensor_reading(byte line_sensor_number = 0) {     // Electrical function that returns an integer (byte) for what colour the line below is (true=white,false=black) (0=Left,1=Center,2=Right sensor)
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE) 
+  //  if (analogRead(LS1_PIN) < 500) {                               // Checks if we meet the cutoff or not (less than 500 = White)
+//    line_detector_1 = true;
+//  }
+//  else {
+//    line_detector_1 = false;
+//  }
+//  if (analogRead(LS2_PIN) < 500) {
+//    line_detector_2 = true;
+//  }
+//  else {
+//    line_detector_2 = false;
+//  }
+//  if (analogRead(LS3_PIN) < 500) {
+//    line_detector_3 = true;
+//  }
+//  else {
+//    line_detector_3 = false;
+//  }
   
+  if (digitalRead(LS1_PIN)==1) {
+    line_detector_1 = true
+  }
+  else {
+    line_detector_1 = false
+  }
+  if (digitalRead(LS2_PIN)==1) {
+    line_detector_2 = true
+  }
+  else {
+    line_detector_2 = false
+  }
+  if (digitalRead(LS3_PIN)==1) {
+    line_detector_3 = true
+  }
+  else {
+    line_detector_3 = false
+  }
 }
 
 int take_ultrasonic_reading() {
@@ -69,7 +101,7 @@ int take_ultrasonic_reading() {
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 bool follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
-  take_line_sensor_reading()
+  take_line_sensor_readings()
                                                                  // Default on the line, go straight ahead case
   if ((line_detector_2 == true) and (line_detector_1 == false and (line_detector_3 == false)){    
     drive_motor(left_motor_port, 255, false);
@@ -143,7 +175,10 @@ void setup() {                                                   // Function tha
   Serial.print("Motorshield successfully initialised.");
 
   pinMode(LED1_PIN, OUTPUT);                                     // Declare the Pin used for Orange LED (LED1) as OUTPUT
-
+  pinMode(LS1_PIN, INPUT);                                       // Declare the line sensor pins as inputs
+  pinMode(LS2_PIN, INPUT);
+  pinMode(LS3_PIN, INPUT);
+  
   robot_state = 0;                                               // Reset robot state to default
 
   left_motor->setSpeed(0);                                       // Initialise left motor
@@ -191,6 +226,10 @@ void loop() {                                                    // Function tha
       drive_motor(left_motor,255-255*(tick_counter*tick_length-3000)/3000,false);                                  
       drive_motor(right_motor,255-255*(tick_counter*tick_length-3000)/3000,true);
     }
+  }
+  else if (robot_test_state == 5) {
+    if (tick_counter*tick_length > 3000) {
+      follow_line();
   }
   else if (tick_length * tick_counter > 3000):                    // main program
 
