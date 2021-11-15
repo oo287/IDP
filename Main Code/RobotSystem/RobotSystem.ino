@@ -68,24 +68,28 @@ int take_ultrasonic_reading() {
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
+line_detector_1 = take_line_sensor_reading(0)                    // initiate line sensor variable (1=L 2=m 3=R)
+line_detector_2 = take_line_sensor_reading(1)
+line_detector_3 = take_line_sensor_reading(2)
+
                                                                  // Default on the line, go straight ahead case
-  if ((line_detector_2 > 500) and (line_detector_1 < 500) and (line_detector_3 < 500)){    
+  if ((line_detector_2 == true) and (line_detector_1 == false and (line_detector_3 == false)){    
     drive_motor(left_motor_port, 255, false);
     drive_motor(right_motor_port, 255, false);
   }                                                              // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
-  else if ((line_detector_2 < 500) and (line_detector_1 < 500) and (line_detector_3 < 500)){ 
+  else if ((line_detector_2 == false) and (line_detector_1 == false) and (line_detector_3 == false)){ 
     drive_motor(left_motor_port, 200, false);
     drive_motor(right_motor_port, 200, false);
   }                                                              // Hit line on LHS  so steering RIGHT
-  else if ((line_detector_1 > 500) and (line_detector_3 < 500)){ 
+  else if ((line_detector_1 == true) and (line_detector_3 == false){ 
     drive_motor(left_motor_port, 255, false);
     drive_motor(right_motor_port, 200, false);
   }                                                              // Hit line on RHS  so steering LEFT
-  else if ((line_detector_1 > 500) and (line_detector_3 < 500)){ 
+  else if ((line_detector_1 == false) and (line_detector_3 == true)){ 
     drive_motor(left_motor_port, 200, false);
     drive_motor(right_motor_port, 255, false);
   }                                                              // Hit horizontal line (STOP)
-  else if ((line_detector_2 > 500) and (line_detector_1 > 500) and (line_detector_3 > 500)){ 
+  else if ((line_detector_2 == true) and (line_detector_1 == true) and (line_detector_3 == true)){ 
     drive_motor(left_motor_port, 0, false);
     drive_motor(right_motor_port, 0, false);
   }
