@@ -6,10 +6,9 @@ unsigned byte robot_test_state = 4;                              // Variable to 
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
 unsigned const int tick_length = 5;                              // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
 
-byte robot_state = 0;                                            // Variable to track the stage of the problem (0=Driving on line,1=Driving off line,2=Stopped)
-byte no_dummies_rescued = 0;                                     // Number of dummies returned to their zones
+byte robot_state = 0;                                            // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 
-int line_detector_1, line_detector_2, line_detector_3;           // Output of line detector (0-1023) 1 LHS 2 middle 3 RHS
+bool line_detector_1, line_detector_2, line_detector_3;          // Output of line detector (0,1) 1 LHS 2 middle 3 RHS
 int IR_sensor_magnitude;                                         // Output magnitude of IR sensor (for locating dummies)
 int max_IR_sensor_magnitude;                                     // Maximum value of IR recorded throughout a rotation
 int min_IR_sensor_magnitude;                                     // Minimum value of IR recorded throughout a rotation (used to distinguish between the dummy and background noise)
@@ -67,10 +66,10 @@ int take_ultrasonic_reading() {
 }
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
-void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
-line_detector_1 = take_line_sensor_reading(0)                    // initiate line sensor variable (1=L 2=m 3=R)
-line_detector_2 = take_line_sensor_reading(1)
-line_detector_3 = take_line_sensor_reading(2)
+bool follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
+  line_detector_1 = take_line_sensor_reading(0)                    // initiate line sensor variable (1=L 2=m 3=R)
+  line_detector_2 = take_line_sensor_reading(1)
+  line_detector_3 = take_line_sensor_reading(2)
 
                                                                  // Default on the line, go straight ahead case
   if ((line_detector_2 == true) and (line_detector_1 == false and (line_detector_3 == false)){    
@@ -92,6 +91,7 @@ line_detector_3 = take_line_sensor_reading(2)
   else if ((line_detector_2 == true) and (line_detector_1 == true) and (line_detector_3 == true)){ 
     drive_motor(left_motor_port, 0, false);
     drive_motor(right_motor_port, 0, false);
+    return true
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
     drive_motor(right_motor_port, 100, false);
@@ -118,6 +118,17 @@ bool point_towards_nearest_dummy(bool clockwise=true){           // Function to:
   // UNFINISHED (OLLIE)
 }
 
+void identify_dummy(){
+  // write this when electrical sorted ir sensor
+}
+
+bool pick_up_dummy(){
+  // when claw built write this and give output of when its 
+}
+
+void drop_off_dummy(){
+  // write this when claw built
+}
 // --------- Setup Function ---------                            // --------- Setup Function ---------
 void setup() {                                                   // Function that runs on power-up/RESET
   Serial.begin(9600);                                            // Start Serial to print debug info
@@ -178,7 +189,34 @@ void loop() {                                                    // Function tha
       drive_motor(right_motor,255-255*(tick_counter*tick_length-3000)/3000,true);
     }
   }
-  
+  else if (tick_length * tick_counter > 3000):                                                           // main program
+
+    if (robot_state == 0){                                        // starting sequence -> pick up first dummy
+      if ((take_ultrasonic_reading() > 5) and (take_ir_reading() < 1024)){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+        follow_line();
+      }
+      else{
+        drive_motor(left_motor,0,true);                                    
+        drive_motor(right_motor,0,true);
+        delay(5000);
+        identify_dummy()
+        pick_up_dummy();
+      robot_state = 1
+      }
+    
+    }
+    if ((robot_state == 1) and (pick_up_dummy() == true)){      //picked up first dummy and drop it off
+      while(follow_line() == false){
+        follow_line()
+      }
+      drop_off_dummy()
+      robot_state = 2
+    }
+    if (robot_state == 2)                                       //find 2nd dummy
+      point_towards_nearest_dummy()
+
+
+
   tick_counter ++;                                               // Increment tick counter
   delay(tick_length - (millis() % tick_length));                 // Delay the remaining milliseconds of the tick to keep tick rate constant (as long as computer fast enough)
 }
