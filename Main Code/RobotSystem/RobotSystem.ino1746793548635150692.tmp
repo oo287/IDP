@@ -117,7 +117,6 @@ void drive_servo(byte servo_number, int servo_angle) {           // Electrical f
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
-  take_line_sensor_readings();
                                                                  // Default on the line, go straight ahead case
   if ((line_detector_2) and (not line_detector_1) and (not line_detector_3)){    
     drive_motor(left_motor, 255, false);
@@ -125,17 +124,17 @@ void follow_line() {                                             // Function tha
     Serial.println("1");
   }                                                              // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
   else if ((not line_detector_2) and (not line_detector_1) and (not line_detector_3)){ 
-    drive_motor(left_motor, 200, false);
-    drive_motor(right_motor, 200, false);
+    drive_motor(left_motor, 50, false);
+    drive_motor(right_motor, 50, false);
     Serial.println("2");
   }                                                              // Hit line on LHS  so steering RIGHT
   else if ((line_detector_1) and (not line_detector_3)){ 
     drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 200, false);
+    drive_motor(right_motor, 50 , false);
     Serial.println("3");
   }                                                              // Hit line on RHS  so steering LEFT
   else if ((not line_detector_1) and (line_detector_3)){ 
-    drive_motor(left_motor, 200, false);
+    drive_motor(left_motor, 50, false);
     drive_motor(right_motor, 255, false);
     Serial.println("4");
   }                                                              // Hit horizontal line (return TRUE)
@@ -145,8 +144,8 @@ void follow_line() {                                             // Function tha
     Serial.println("5");
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
-    drive_motor(right_motor, 50, false);
-    drive_motor(left_motor, 50, true);
+    drive_motor(right_motor, 20, false);
+    drive_motor(left_motor, 20, true);
     Serial.println("6");
   }
 }
@@ -249,6 +248,7 @@ void loop() {                                                    // Function tha
   }
   else if (robot_test_state == 5) {
     if (tick_counter*tick_length > 3000) {
+      take_line_sensor_readings();
       follow_line();
     }
   }

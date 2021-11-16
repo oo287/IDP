@@ -117,7 +117,6 @@ void drive_servo(byte servo_number, int servo_angle) {           // Electrical f
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
-  take_line_sensor_readings();
                                                                  // Default on the line, go straight ahead case
   if ((line_detector_2) and (not line_detector_1) and (not line_detector_3)){    
     drive_motor(left_motor, 255, false);
@@ -249,6 +248,7 @@ void loop() {                                                    // Function tha
   }
   else if (robot_test_state == 5) {
     if (tick_counter*tick_length > 3000) {
+      take_line_sensor_readings();
       follow_line();
     }
   }
