@@ -2,9 +2,9 @@
 #include <Adafruit_MotorShield.h>                                // Import motor shield library
 
 // --------- Variables ---------                                 // --------- Variables ---------
-byte robot_test_state = 6;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+byte robot_test_state = 2;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
-unsigned const int tick_length = 20;                              // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
+unsigned const int tick_length = 5;                              // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
 unsigned long time_when_i_say_so = 0;
 bool horizontal_line = false;
 bool finished_dropping = false;
@@ -23,15 +23,11 @@ const byte left_motor_port =  3;                                 // Motor shield
 const byte right_motor_port = 4;                                 // Motor shield port that the right motor uses
 
 const byte LED1_PIN = 6;                                         // Pin used for Orange LED (LED1)
-const byte LS1_PIN = A2;                                          // Pins used for Line Sensors (LS) 1, 2 and 3
-const byte LS2_PIN = A1;
-const byte LS3_PIN = A0;
+const byte LS1_PIN = 2;                                          // Pins used for Line Sensors (LS) 1, 2 and 3
+const byte LS2_PIN = 1;
+const byte LS3_PIN = 0;
 const byte TRIG_PIN = 12;
 const byte ECHO_PIN = 13;
-const int IR_AMP_PIN = A3;
-
-unsigned long sweep_start_time = 0;
-bool dummy_located = false;
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();              // Create motorshield object called 'AFMS' with default I2C address. Put I2C address in brackets if different address needed
@@ -62,25 +58,25 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
   } 
 }
 
-int measure_IR_amplitude(int IR_PIN, int samples) {
+int take_IR_sensor_reading(int IR_PIN=A5, int samples=107) {
   // Function to record voltage amplitude of IR sensor 10% duty cycle signal
   // IR_PIN must be an analog pin for any non-binary results.
   // Wave is ~6ms long, and samples take ~ 112us, so set samples to AT LEAST >54 to ensure peak is included in measurement (preferably > 108)
   // CODE IS BLOCKING TO ALLOW FAST SAMPLING RATE - blocking time will increase linearly with samples
   
-  int max_val = 0;                                                // Variable to store max. voltage measured
-  int new_val;                                                // Variable to store current measurement
+  int max_val;                            // Variable to store max. voltage measured
+  int new_val;                            // Variable to store current measurement
   for (int i=0; i<samples; i++) {
-    new_val = analogRead(IR_PIN);                             // Measure current voltage from photodiode
+    new_val = analogRead(IR_PIN);         // Measure current voltage from photodiode
     if (new_val > max_val) {
-      max_val = new_val;                                      // Update maximum recorded value if it is new highest
+      max_val = new_val;                  // Update maximum recorded value if it is new highest
     }
   }
   return max_val;
 }
 
 int take_ultrasonic_reading() {
-  long duration, distance;                                       //no idea how this works but should just return distance, add some prints if i broke it
+  long duration, distance;                                    //no idea how this works but should just return distance, add some prints if i broke it
   digitalWrite(TRIG_PIN, LOW);  // Added this line 
   delayMicroseconds(2); // Added this line 
   digitalWrite(TRIG_PIN, HIGH); 
@@ -154,53 +150,24 @@ void follow_line() {                                             // Function tha
   }
 }
 
-bool point_towards_nearest_dummy(int sweep_time = 8000, float threshold = 0.9, int motor_sweep_speed = 30) {           // Function to: Stop, spin on the spot, turn towards first dummy seen (moving in the direction given)
-
-  if (sweep_start_time == 0) {
-    sweep_start_time = tick_counter*tick_length;
-    drive_motor(left_motor, 0, true);                         // Stop driving to prepare for turning around
-    drive_motor(right_motor, 0, false);
-  }
-
-  if (tick_counter*tick_length < sweep_start_time + sweep_time) {
-    
-    drive_motor(left_motor, motor_sweep_speed, false);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
-    drive_motor(right_motor, motor_sweep_speed, true);
-  
-    IR_sensor_magnitude = measure_IR_amplitude(IR_AMP_PIN,107);                  // Take IR sensor input
-  
-    if (IR_sensor_magnitude > max_IR_sensor_magnitude) {           // If new max found...
-      max_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set max to current value
-    }
-  }
-  else if (tick_counter*tick_length < sweep_start_time + 2*sweep_time) {
-
-    if (not dummy_located) {
-
-      IR_sensor_magnitude = measure_IR_amplitude(IR_AMP_PIN,107);
-
-      if (IR_sensor_magnitude < max_IR_sensor_magnitude*threshold) {
-
-        drive_motor(left_motor, motor_sweep_speed, true);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
-        drive_motor(right_motor, motor_sweep_speed, false);
-        
-      }
-      else {
-        dummy_located = true;
-        delay(1000000);
-        drive_motor(left_motor_port, 0, true);                        
-        drive_motor(right_motor_port, 0, true);
-      }
-    }
-    else if (tick_counter*tick_length > sweep_start_time + 2*sweep_time){
-      drive_motor(left_motor_port, 0, true);                        
-      drive_motor(right_motor_port, 0, true);
-    }
-  }
-
-  
-  
-}
+//bool point_towards_nearest_dummy(bool clockwise=true){           // Function to: Stop, spin on the spot, turn towards first dummy seen (moving in the direction given)
+//
+//  drive_motor(left_motor_port, 0, true);                         // Stop driving to prepare for turning around
+//  drive_motor(right_motor_port, 0, false);
+//  
+//  drive_motor(left_motor_port, 50, true);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
+//  drive_motor(right_motor_port, 50 , false);
+//
+//  IR_sensor_magnitude = take_IR_sensor_reading();                // Take IR sensor input
+//
+//  if (IR_sensor_magnitude > max_IR_sensor_magnitude) {           // If new max found...
+//    max_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set max to current value
+//  }
+//  if (IR_sensor_magnitude < min_IR_sensor_magnitude) {           // If new min found...
+//    min_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set min to current value
+//  }
+//  // UNFINISHED (OLLIE)
+//}
 
 int identify_dummy(){                                           // Reads IR input signal and determines which dummy is in front of it 
   // write this when electrical sorted ir sensor
@@ -233,7 +200,6 @@ void setup() {                                                   // Function tha
 
   pinMode(TRIG_PIN, OUTPUT);                                       //Declare pins for ultrasound sensor
   pinMode(ECHO_PIN, INPUT); 
-  pinMode(IR_AMP_PIN,INPUT);
 
   robot_state = 0;                                               // Reset robot state to default
 
@@ -286,14 +252,6 @@ void loop() {                                                    // Function tha
   else if (robot_test_state == 5) {
     if (tick_counter*tick_length > 3000) {
       follow_line();
-    }
-  }
-  else if (robot_test_state == 6) {
-    if (tick_counter*tick_length > 3000) {
-      point_towards_nearest_dummy(4000,0.95,255);
-      Serial.println(max_IR_sensor_magnitude);
-      Serial.println(IR_sensor_magnitude);
-      Serial.println(dummy_located);
     }
   }
 /*  else if (tick_length * tick_counter > 3000) {                    // main program

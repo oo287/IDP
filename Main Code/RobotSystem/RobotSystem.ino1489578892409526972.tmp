@@ -4,7 +4,7 @@
 // --------- Variables ---------                                 // --------- Variables ---------
 byte robot_test_state = 6;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
-unsigned const int tick_length = 20;                              // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
+unsigned const int tick_length = 5;                              // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
 unsigned long time_when_i_say_so = 0;
 bool horizontal_line = false;
 bool finished_dropping = false;
@@ -158,14 +158,15 @@ bool point_towards_nearest_dummy(int sweep_time = 8000, float threshold = 0.9, i
 
   if (sweep_start_time == 0) {
     sweep_start_time = tick_counter*tick_length;
-    drive_motor(left_motor, 0, true);                         // Stop driving to prepare for turning around
-    drive_motor(right_motor, 0, false);
   }
+  
+  drive_motor(left_motor, 0, true);                         // Stop driving to prepare for turning around
+  drive_motor(right_motor, 0, false);
 
   if (tick_counter*tick_length < sweep_start_time + sweep_time) {
     
-    drive_motor(left_motor, motor_sweep_speed, false);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
-    drive_motor(right_motor, motor_sweep_speed, true);
+    drive_motor(left_motor, motor_sweep_speed, true);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
+    drive_motor(right_motor, motor_sweep_speed, false);
   
     IR_sensor_magnitude = measure_IR_amplitude(IR_AMP_PIN,107);                  // Take IR sensor input
   
@@ -181,20 +182,15 @@ bool point_towards_nearest_dummy(int sweep_time = 8000, float threshold = 0.9, i
 
       if (IR_sensor_magnitude < max_IR_sensor_magnitude*threshold) {
 
-        drive_motor(left_motor, motor_sweep_speed, true);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
-        drive_motor(right_motor, motor_sweep_speed, false);
+        drive_motor(left_motor, motor_sweep_speed, false);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
+        drive_motor(right_motor, motor_sweep_speed, true);
         
       }
       else {
         dummy_located = true;
-        delay(1000000);
-        drive_motor(left_motor_port, 0, true);                        
+        drive_motor(left_motor_port, 0, false);                        
         drive_motor(right_motor_port, 0, true);
       }
-    }
-    else if (tick_counter*tick_length > sweep_start_time + 2*sweep_time){
-      drive_motor(left_motor_port, 0, true);                        
-      drive_motor(right_motor_port, 0, true);
     }
   }
 
@@ -289,11 +285,9 @@ void loop() {                                                    // Function tha
     }
   }
   else if (robot_test_state == 6) {
-    if (tick_counter*tick_length > 3000) {
-      point_towards_nearest_dummy(4000,0.95,255);
-      Serial.println(max_IR_sensor_magnitude);
-      Serial.println(IR_sensor_magnitude);
-      Serial.println(dummy_located);
+    point_towards_nearest_dummy(1000,0.95,100);
+    if (tick_counter*tick_length % 500 == 0) {
+      Serial.println(max_IR_sensor_magnitude)
     }
   }
 /*  else if (tick_length * tick_counter > 3000) {                    // main program

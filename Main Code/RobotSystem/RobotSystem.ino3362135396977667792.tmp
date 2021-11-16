@@ -161,6 +161,8 @@ bool point_towards_nearest_dummy(int sweep_time = 8000, float threshold = 0.9, i
     drive_motor(left_motor, 0, true);                         // Stop driving to prepare for turning around
     drive_motor(right_motor, 0, false);
   }
+  
+  
 
   if (tick_counter*tick_length < sweep_start_time + sweep_time) {
     
@@ -187,14 +189,9 @@ bool point_towards_nearest_dummy(int sweep_time = 8000, float threshold = 0.9, i
       }
       else {
         dummy_located = true;
-        delay(1000000);
         drive_motor(left_motor_port, 0, true);                        
         drive_motor(right_motor_port, 0, true);
       }
-    }
-    else if (tick_counter*tick_length > sweep_start_time + 2*sweep_time){
-      drive_motor(left_motor_port, 0, true);                        
-      drive_motor(right_motor_port, 0, true);
     }
   }
 
@@ -289,12 +286,10 @@ void loop() {                                                    // Function tha
     }
   }
   else if (robot_test_state == 6) {
-    if (tick_counter*tick_length > 3000) {
-      point_towards_nearest_dummy(4000,0.95,255);
-      Serial.println(max_IR_sensor_magnitude);
-      Serial.println(IR_sensor_magnitude);
-      Serial.println(dummy_located);
-    }
+    point_towards_nearest_dummy(4000,0.95,255);
+    Serial.println(max_IR_sensor_magnitude);
+    Serial.println(IR_sensor_magnitude);
+    Serial.println(dummy_located);
   }
 /*  else if (tick_length * tick_counter > 3000) {                    // main program
    if (robot_state == 0){                                        // starting sequence -> pick up first dummy
