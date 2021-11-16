@@ -2,29 +2,22 @@
 #include <Adafruit_MotorShield.h>                                // Import motor shield library
 
 // --------- Variables ---------                                 // --------- Variables ---------
-byte robot_test_state = 5;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
-unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
-unsigned const int tick_length = 5;                              // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
-unsigned long time_when_i_say_so = 0;
+byte robot_test_state = 4;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+long tick_counter = 0;                                           // Counts the number of ticks elapsed since program started running
+const int tick_length = 5;                                       // The length of one tick in milliseconds. Clock Frequency = 1/tick_length
 
-byte robot_state = 0;                                            // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
+byte robot_state = 0;                                            // Variable to track the stage of the problem (0=Driving on line,1=Driving off line,2=Stopped)
+byte no_dummies_rescued = 0;                                     // Number of dummies returned to their zones
 
-bool line_detector_1, line_detector_2, line_detector_3;          // Booleans to describe if each line sensor has a line below or not
+int line_detector_1, line_detector_2, line_detector_3;           // Output of line detector (0-1023) 1 LHS 2 middle 3 RHS
 int IR_sensor_magnitude;                                         // Output magnitude of IR sensor (for locating dummies)
 int max_IR_sensor_magnitude;                                     // Maximum value of IR recorded throughout a rotation
 int min_IR_sensor_magnitude;                                     // Minimum value of IR recorded throughout a rotation (used to distinguish between the dummy and background noise)
-int US_magnitude;                                                // Distance recorded by the ultrasonic sensor. Return 200 if out of range (dist > 200)
 
-int what_dummy_am_I;                                             // The dummy that is detected (0 for line, 1 for red box, 2 for blue box)
-bool horizontal_line;                                            // Variable to track if 
-
-const byte left_motor_port =  3;                                 // Motor shield port that the left motor uses
-const byte right_motor_port = 4;                                 // Motor shield port that the right motor uses
+const byte left_motor_port =  3;                                 // Port of the motor shield that the left motor uses
+const byte right_motor_port = 4;                                 // Port of the motor shield that the right motor uses
 
 const byte LED1_PIN = 6;                                         // Pin used for Orange LED (LED1)
-const byte LS1_PIN = A2;                                         // Pins used for Line Sensors (LS) 1, 2 and 3
-const byte LS2_PIN = A1;
-const byte LS3_PIN = A0;
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();              // Create motorshield object called 'AFMS' with default I2C address. Put I2C address in brackets if different address needed
@@ -55,134 +48,54 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
   } 
 }
 
-void take_IR_sensor_reading() {                                 // Electrical function that updates the value of IR_sensor_magnitude
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE)
-
-}
-
-int take_ultrasonic_reading() {                                  // Electrical function that updates the value of the ultrasonic
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE)
-  
-}
-
-void take_line_sensor_readings() {
-
-  if (analogRead(LS1_PIN) < 500) {                               // Checks if we meet the cutoff or not (less than 500 = White)
-    line_detector_1 = true;
-  }
-  else {
-    line_detector_1 = false;
-  }
-  if (analogRead(LS2_PIN) < 500) {
-    line_detector_2 = true;
-  }
-  else {
-    line_detector_2 = false;
-  }
-  if (analogRead(LS3_PIN) < 500) {
-    line_detector_3 = true;
-  }
-  else {
-    line_detector_3 = false;
-  }
-//  
-//  if (digitalRead(LS1_PIN)==1) {
-//    line_detector_1 = true;
-//  }
-//  else {
-//    line_detector_1 = false;
-//  }
-//  if (digitalRead(LS2_PIN)==1) {
-//    line_detector_2 = true;
-//  }
-//  else {
-//    line_detector_2 = false;
-//  }
-//  if (digitalRead(LS3_PIN)==1) {
-//    line_detector_3 = true;
-//  }
-//  else {
-//    line_detector_3 = false;
-//  }
-  
-}
-
-void drive_servo(byte servo_number, int servo_angle) {           // Electrical function that sets the servo angle to the stated value. 
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE)
-  
-}
-
 // --------- Software Functions ---------                        // --------- Software Functions ---------
-void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
-                                                                 // Default on the line, go straight ahead case
-  if ((line_detector_2) and (not line_detector_1) and (not line_detector_3)){    
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 255, false);
-    Serial.println("1");
+void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear)
+  if ((line_detector_2 > 500) and (line_detector_1 < 500) and    // Default on the line, go straight ahead case
+  (line_detector_3 < 500)){ 
+    drive_motor(left_motor_port, 250, false);
+    drive_motor(right_motor_port, 250, false);
   }                                                              // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
-  else if ((not line_detector_2) and (not line_detector_1) and (not line_detector_3)){ 
-    drive_motor(left_motor, 200, false);
-    drive_motor(right_motor, 200, false);
-    Serial.println("2");
-  }                                                              // Hit line on LHS  so steering RIGHT
-  else if ((line_detector_1) and (not line_detector_3)){ 
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 200, false);
-    Serial.println("3");
-  }                                                              // Hit line on RHS  so steering LEFT
-  else if ((not line_detector_1) and (line_detector_3)){ 
-    drive_motor(left_motor, 200, false);
-    drive_motor(right_motor, 255, false);
-    Serial.println("4");
-  }                                                              // Hit horizontal line (return TRUE)
-  else if ((line_detector_2) and (line_detector_1) and (line_detector_3)){ 
-    drive_motor(left_motor, 0, false);
-    drive_motor(right_motor, 0, false);
-    Serial.println("5");
+  else if ((line_detector_2 < 500) and (line_detector_1 < 500) and (line_detector_3 < 500)){ 
+    drive_motor(left_motor_port, 200, false);
+    drive_motor(right_motor_port, 200, false);
+  }                                                              // Hit line on LHS so steering RIGHT
+  else if ((line_detector_2 < 500) and (line_detector_1 > 500) and (line_detector_3 < 500)){ 
+    drive_motor(left_motor_port, 250, false);
+    drive_motor(right_motor_port, 200, false);
+  }                                                              // Hit line on RHS so steering LEFT
+  else if ((line_detector_2 < 500) and (line_detector_1 > 500) and (line_detector_3 < 500)){ 
+    drive_motor(left_motor_port, 200, false);
+    drive_motor(right_motor_port, 250, false);
+  }                                                              // Hit horizontal line (STOP)
+  else if ((line_detector_2 > 500) and (line_detector_1 > 500) and (line_detector_3 > 500)){ 
+    drive_motor(left_motor_port, 0, false);
+    drive_motor(right_motor_port, 0, false);
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
-    drive_motor(right_motor, 50, false);
-    drive_motor(left_motor, 50, true);
-    Serial.println("6");
+    drive_motor(right_motor_port, 100, false);
+    drive_motor(left_motor_port, 100, true);
   }
 }
 
-//bool point_towards_nearest_dummy(bool clockwise=true){           // Function to: Stop, spin on the spot, turn towards first dummy seen (moving in the direction given)
-//
-//  drive_motor(left_motor_port, 0, true);                         // Stop driving to prepare for turning around
-//  drive_motor(right_motor_port, 0, false);
-//  
-//  drive_motor(left_motor_port, 50, true);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
-//  drive_motor(right_motor_port, 50 , false);
-//
-//  IR_sensor_magnitude = take_IR_sensor_reading();                // Take IR sensor input
-//
-//  if (IR_sensor_magnitude > max_IR_sensor_magnitude) {           // If new max found...
-//    max_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set max to current value
-//  }
-//  if (IR_sensor_magnitude < min_IR_sensor_magnitude) {           // If new min found...
-//    min_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set min to current value
-//  }
-//  // UNFINISHED (OLLIE)
-//}
+void point_towards_nearest_dummy(){
 
-void identify_dummy(){                                           // Reads IR input signal and determines which dummy is in front of it 
-  // write this when electrical sorted ir sensor
+  drive_motor(left_motor_port, 0, true);                         // Stop driving to prepare for turning around
+  drive_motor(right_motor_port, 0, false);
+  
+  drive_motor(left_motor_port, 50, true);                        // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
+  drive_motor(right_motor_port, 50 , false);
+
+  IR_sensor_magnitude = take_IR_sensor_reading();                // Take IR sensor input
+
+  if (IR_sensor_magnitude > max_IR_sensor_magnitude) {           // If new max found...
+    max_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set max to current value
+  }
+  if (IR_sensor_magnitude < min_IR_sensor_magnitude) {           // If new min found...
+    min_IR_sensor_magnitude = IR_sensor_magnitude;               // ...set min to current value
+  }
+  
 }
 
-bool pick_up_dummy(){
-  // when claw built write this and give output of when its 
-}
-
-void drop_off_dummy(){
-  // write this when claw built
-}
-void approach_identify_grab(){
-
-}
 // --------- Setup Function ---------                            // --------- Setup Function ---------
 void setup() {                                                   // Function that runs on power-up/RESET
   Serial.begin(9600);                                            // Start Serial to print debug info
@@ -194,10 +107,7 @@ void setup() {                                                   // Function tha
   Serial.print("Motorshield successfully initialised.");
 
   pinMode(LED1_PIN, OUTPUT);                                     // Declare the Pin used for Orange LED (LED1) as OUTPUT
-  pinMode(LS1_PIN, INPUT);                                       // Declare the line sensor pins as inputs
-  pinMode(LS2_PIN, INPUT);
-  pinMode(LS3_PIN, INPUT);
-  
+
   robot_state = 0;                                               // Reset robot state to default
 
   left_motor->setSpeed(0);                                       // Initialise left motor
@@ -244,12 +154,6 @@ void loop() {                                                    // Function tha
                                                                  // Spin Clockwise, slowing down to 0 at the end of the 3-second turn
       drive_motor(left_motor,255-255*(tick_counter*tick_length-3000)/3000,false);                                  
       drive_motor(right_motor,255-255*(tick_counter*tick_length-3000)/3000,true);
-    }
-  }
-  else if (robot_test_state == 5) {
-    if (tick_counter*tick_length > 3000) {
-      take_line_sensor_readings();
-      follow_line();
     }
   }
   
