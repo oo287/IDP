@@ -251,10 +251,66 @@ void loop() {                                                    // Function tha
   }
   else if (robot_test_state == 5) {
     if (tick_counter*tick_length > 3000) {
+      Serial.println("HERE");
       horizontal_line = follow_line();
+//        Serial.print("LS1: ");
+//        Serial.println(analogRead(LS1_PIN));
+//        Serial.print("LS2: ");
+//        Serial.println(analogRead(LS2_PIN));
+//        Serial.print("LS3: ");
+//        Serial.println(analogRead(LS3_PIN));
     }
   }
-  
+//  else if (tick_length * tick_counter > 3000) {                    // main program
+//
+//    if (robot_state == 0){                                        // starting sequence -> pick up first dummy
+//      if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+//        follow_line();
+//      }
+//      else {
+//        drive_motor(left_motor,0,true);                                    
+//        drive_motor(right_motor,0,true);
+//        if (time_when_i_say_so == 0){
+//          time_when_i_say_so = tick_counter*tick_length;
+//        }
+//        if (tick_length * tick_counter > time_when_i_say_so + 5000){
+//          which_dummy_am_I = identify_dummy();
+//          pick_up_dummy();
+//        }
+//        if (pick_up_dummy() == true){
+//          time_when_i_say_so = 0;
+//          robot_state = 1;
+//        }
+//      }
+//    
+//    }
+//  
+//    if (robot_state == 1){      //picked up first dummy and drop it off
+//      if (follow_line() == false){
+//        follow_line();
+//      }
+//      drop_off_dummy();
+//      if (time_when_i_say_so == 0){
+//        time_when_i_say_so = tick_counter * tick_length;
+//      }
+//      if (tick_counter * tick_length < time_when_i_say_so + 1000){
+//        drive_motor(left_motor,255,true);
+//        drive_motor(right_motor,255,true);
+//      }
+//      else{
+//        robot_state = 2;
+//      }
+//    }
+//    
+//    if (robot_state == 2){                                       //find 2nd dummy
+//      point_towards_nearest_dummy();
+//      if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us to the dummy
+//        drive_motor(left_motor,255,false);
+//        drive_motor(right_motor,255,false);
+//      }
+//    }
+
+
   tick_counter ++;                                               // Increment tick counter
   delay(tick_length - (millis() % tick_length));                 // Delay the remaining milliseconds of the tick to keep tick rate constant (as long as computer fast enough)
 }
