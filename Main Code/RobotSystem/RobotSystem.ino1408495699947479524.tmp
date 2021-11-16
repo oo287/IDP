@@ -161,7 +161,7 @@ bool follow_line() {                                             // Function tha
 //  // UNFINISHED (OLLIE)
 //}
 
-void identify_dummy(){                                           // Reads IR input signal and determines which dummy is in front of it 
+void identify_dummy(){
   // write this when electrical sorted ir sensor
 }
 
