@@ -17,8 +17,6 @@ int US_magnitude;                                                // Distance rec
 
 int what_dummy_am_I;                                             // The dummy that is detected (0 for line, 1 for red box, 2 for blue box)
 
-int LS2_temp;
-
 const byte left_motor_port =  3;                                 // Motor shield port that the left motor uses
 const byte right_motor_port = 4;                                 // Motor shield port that the right motor uses
 
@@ -88,6 +86,8 @@ void take_line_sensor_readings() {
   else {
     line_detector_3 = false;
   }
+
+  Serial.println(line_detector_1);
 //  
 //  if (digitalRead(LS1_PIN)==1) {
 //    line_detector_1 = true;
@@ -110,48 +110,36 @@ void take_line_sensor_readings() {
   
 }
 
-void drive_servo(byte servo_number, int servo_angle) {           // Electrical function that sets the servo angle to the stated value. 
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE)
-  
-}
-
 // --------- Software Functions ---------                        // --------- Software Functions ---------
-void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
-  //take_line_sensor_readings();
+bool follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
+  take_line_sensor_readings();
                                                                  // Default on the line, go straight ahead case
-  if ((line_detector_2) and (not line_detector_1) and (not line_detector_3)){    
-    //drive_motor(left_motor_port, 255, false);
-    //drive_motor(right_motor_port, 255, false);
-    Serial.println("1");
+  if ((line_detector_2 == true) and (line_detector_1 == false) and (line_detector_3 == false)){    
+    drive_motor(left_motor_port, 255, false);
+    drive_motor(right_motor_port, 255, false);
   }                                                              // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
-  else if ((not line_detector_2) and (not line_detector_1) and (not line_detector_3)){ 
-    //drive_motor(left_motor_port, 200, false);
-    //drive_motor(right_motor_port, 200, false);
-    Serial.println("2");
+  else if ((line_detector_2 == false) and (line_detector_1 == false) and (line_detector_3 == false)){ 
+    drive_motor(left_motor_port, 200, false);
+    drive_motor(right_motor_port, 200, false);
   }                                                              // Hit line on LHS  so steering RIGHT
-  else if ((line_detector_1) and (not line_detector_3)){ 
-    //drive_motor(left_motor_port, 255, false);
-    //drive_motor(right_motor_port, 200, false);
-    Serial.println("3");
+  else if ((line_detector_1 == true) and (line_detector_3 == false)){ 
+    drive_motor(left_motor_port, 255, false);
+    drive_motor(right_motor_port, 200, false);
   }                                                              // Hit line on RHS  so steering LEFT
-  else if ((not line_detector_1) and (line_detector_3)){ 
-    //drive_motor(left_motor_port, 200, false);
-    //drive_motor(right_motor_port, 255, false);
-    Serial.println("4");
+  else if ((line_detector_1 == false) and (line_detector_3 == true)){ 
+    drive_motor(left_motor_port, 200, false);
+    drive_motor(right_motor_port, 255, false);
   }                                                              // Hit horizontal line (STOP)
-  else if ((line_detector_2) and (line_detector_1) and (line_detector_3)){ 
-    //drive_motor(left_motor_port, 0, false);
-    //drive_motor(right_motor_port, 0, false);
-    Serial.println("5");
-    //return true;
+  else if ((line_detector_2 == true) and (line_detector_1 == true) and (line_detector_3 == true)){ 
+    drive_motor(left_motor_port, 0, false);
+    drive_motor(right_motor_port, 0, false);
+    return true;
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
-    //drive_motor(right_motor_port, 100, false);
-    //drive_motor(left_motor_port, 100, true);
-    Serial.println("6");
+    drive_motor(right_motor_port, 100, false);
+    drive_motor(left_motor_port, 100, true);
   }
-  //return false;
+  return false;
 }
 
 //bool point_towards_nearest_dummy(bool clockwise=true){           // Function to: Stop, spin on the spot, turn towards first dummy seen (moving in the direction given)
@@ -215,6 +203,7 @@ void setup() {                                                   // Function tha
 
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
 void loop() {                                                    // Function that runs repeatedly whilst the robot is on
+  Serial.println("Loop");
   if (robot_test_state == 1) {                                   // Test 1: Spin the wheels without control of any kind
     if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
       drive_motor(left_motor,255,false);                         // Use the electrical function to spin each motor at max speed
@@ -252,15 +241,7 @@ void loop() {                                                    // Function tha
   }
   else if (robot_test_state == 5) {
     if (tick_counter*tick_length > 3000) {
-      take_line_sensor_readings();
-      Serial.println("HERE");
-      follow_line();
-//        Serial.print("LS1: ");
-//        Serial.println(analogRead(LS1_PIN));
-//        Serial.print("LS2: ");
-//        Serial.println(analogRead(LS2_PIN));
-//        Serial.print("LS3: ");
-//        Serial.println(analogRead(LS3_PIN));
+      Serial.println(analogRead(LS1_PIN));
     }
   }
 //  else if (tick_length * tick_counter > 3000) {                    // main program

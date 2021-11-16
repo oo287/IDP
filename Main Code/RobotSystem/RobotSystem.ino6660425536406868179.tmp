@@ -110,46 +110,34 @@ void take_line_sensor_readings() {
   
 }
 
-void drive_servo(byte servo_number, int servo_angle) {           // Electrical function that sets the servo angle to the stated value. 
-
-  // ELECTRICAL WRITE THIS FUNCTION (PLEASE)
-  
-}
-
 // --------- Software Functions ---------                        // --------- Software Functions ---------
 void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
-  //take_line_sensor_readings();
+  take_line_sensor_readings();
                                                                  // Default on the line, go straight ahead case
-  if ((line_detector_2) and (not line_detector_1) and (not line_detector_3)){    
-    //drive_motor(left_motor_port, 255, false);
-    //drive_motor(right_motor_port, 255, false);
-    Serial.println("1");
+  if ((line_detector_2 == 1) and (line_detector_1 == 0) and (line_detector_3 == 0)){    
+    drive_motor(left_motor_port, 255, false);
+    drive_motor(right_motor_port, 255, false);
   }                                                              // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
-  else if ((not line_detector_2) and (not line_detector_1) and (not line_detector_3)){ 
-    //drive_motor(left_motor_port, 200, false);
-    //drive_motor(right_motor_port, 200, false);
-    Serial.println("2");
+  else if ((line_detector_2 == 0) and (line_detector_1 == 0) and (line_detector_3 == 0)){ 
+    drive_motor(left_motor_port, 200, false);
+    drive_motor(right_motor_port, 200, false);
   }                                                              // Hit line on LHS  so steering RIGHT
-  else if ((line_detector_1) and (not line_detector_3)){ 
-    //drive_motor(left_motor_port, 255, false);
-    //drive_motor(right_motor_port, 200, false);
-    Serial.println("3");
+  else if ((line_detector_1 == 1) and (line_detector_3 == 0)){ 
+    drive_motor(left_motor_port, 255, false);
+    drive_motor(right_motor_port, 200, false);
   }                                                              // Hit line on RHS  so steering LEFT
-  else if ((not line_detector_1) and (line_detector_3)){ 
-    //drive_motor(left_motor_port, 200, false);
-    //drive_motor(right_motor_port, 255, false);
-    Serial.println("4");
+  else if ((line_detector_1 == 0) and (line_detector_3 == 1)){ 
+    drive_motor(left_motor_port, 200, false);
+    drive_motor(right_motor_port, 255, false);
   }                                                              // Hit horizontal line (STOP)
-  else if ((line_detector_2) and (line_detector_1) and (line_detector_3)){ 
-    //drive_motor(left_motor_port, 0, false);
-    //drive_motor(right_motor_port, 0, false);
-    Serial.println("5");
+  else if ((line_detector_2 == 1) and (line_detector_1 == 1) and (line_detector_3 == 1)){ 
+    drive_motor(left_motor_port, 0, false);
+    drive_motor(right_motor_port, 0, false);
     //return true;
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
-    //drive_motor(right_motor_port, 100, false);
-    //drive_motor(left_motor_port, 100, true);
-    Serial.println("6");
+    drive_motor(right_motor_port, 100, false);
+    drive_motor(left_motor_port, 100, true);
   }
   //return false;
 }
@@ -252,8 +240,6 @@ void loop() {                                                    // Function tha
   }
   else if (robot_test_state == 5) {
     if (tick_counter*tick_length > 3000) {
-      take_line_sensor_readings();
-      Serial.println("HERE");
       follow_line();
 //        Serial.print("LS1: ");
 //        Serial.println(analogRead(LS1_PIN));
