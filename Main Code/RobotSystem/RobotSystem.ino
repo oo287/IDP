@@ -83,7 +83,7 @@ int take_ultrasonic_reading() {
   duration = pulseIn(echoPin, HIGH); 
   distance = (duration/2) / 29.1; 
   if (distance >= 200 || distance <= 0){
-    return 255;
+    return 200;
   } 
   else { 
     return distance;
@@ -110,60 +110,42 @@ void take_line_sensor_readings() {
   else {
     line_detector_3 = false;
   }
-
-  Serial.println(line_detector_1);
-//  
-//  if (digitalRead(LS1_PIN)==1) {
-//    line_detector_1 = true;
-//  }
-//  else {
-//    line_detector_1 = false;
-//  }
-//  if (digitalRead(LS2_PIN)==1) {
-//    line_detector_2 = true;
-//  }
-//  else {
-//    line_detector_2 = false;
-//  }
-//  if (digitalRead(LS3_PIN)==1) {
-//    line_detector_3 = true;
-//  }
-//  else {
-//    line_detector_3 = false;
-//  }
-  
 }
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
-bool follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
-  take_line_sensor_readings();
+void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
+  take_line_sensor_readings();                                   // Update line sensor booleans
                                                                  // Default on the line, go straight ahead case
-  if ((line_detector_2 == true) and (line_detector_1 == false) and (line_detector_3 == false)){    
-    drive_motor(left_motor_port, 255, false);
-    drive_motor(right_motor_port, 255, false);
+  if ((line_detector_2) and (not line_detector_1) and (not line_detector_3)){    
+    drive_motor(left_motor, 255, false);
+    drive_motor(right_motor, 255, false);
+    Serial.println("1");
   }                                                              // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
-  else if ((line_detector_2 == false) and (line_detector_1 == false) and (line_detector_3 == false)){ 
-    drive_motor(left_motor_port, 200, false);
-    drive_motor(right_motor_port, 200, false);
+  else if ((not line_detector_2) and (not line_detector_1) and (not line_detector_3)){ 
+    drive_motor(left_motor, 200, false);
+    drive_motor(right_motor, 200, false);
+    Serial.println("2");
   }                                                              // Hit line on LHS  so steering RIGHT
-  else if ((line_detector_1 == true) and (line_detector_3 == false)){ 
-    drive_motor(left_motor_port, 255, false);
-    drive_motor(right_motor_port, 200, false);
+  else if ((line_detector_1) and (not line_detector_3)){ 
+    drive_motor(left_motor, 255, false);
+    drive_motor(right_motor, 200, false);
+    Serial.println("3");
   }                                                              // Hit line on RHS  so steering LEFT
-  else if ((line_detector_1 == false) and (line_detector_3 == true)){ 
-    drive_motor(left_motor_port, 200, false);
-    drive_motor(right_motor_port, 255, false);
-  }                                                              // Hit horizontal line (continue) but return true, must be made to stop elsewhere in code
-  else if ((line_detector_2 == true) and (line_detector_1 == true) and (line_detector_3 == true)){ 
-    drive_motor(left_motor_port, 255, false);
-    drive_motor(right_motor_port, 255, false);
-    return true;
+  else if ((not line_detector_1) and (line_detector_3)){ 
+    drive_motor(left_motor, 200, false);
+    drive_motor(right_motor, 255, false);
+    Serial.println("4");
+  }                                                              // Hit horizontal line (return TRUE)
+  else if ((line_detector_2) and (line_detector_1) and (line_detector_3)){ 
+    drive_motor(left_motor, 0, false);
+    drive_motor(right_motor, 0, false);
+    Serial.println("5");
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
-    drive_motor(right_motor_port, 100, false);
-    drive_motor(left_motor_port, 100, true);
+    drive_motor(right_motor, 50, false);
+    drive_motor(left_motor, 50, true);
+    Serial.println("6");
   }
-  return false;
 }
 
 //bool point_towards_nearest_dummy(bool clockwise=true){           // Function to: Stop, spin on the spot, turn towards first dummy seen (moving in the direction given)
@@ -272,7 +254,6 @@ void loop() {                                                    // Function tha
     }
   }
 /*  else if (tick_length * tick_counter > 3000) {                    // main program
-
    if (robot_state == 0){                                        // starting sequence -> pick up first dummy
      if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
        follow_line();
@@ -307,7 +288,6 @@ void loop() {                                                    // Function tha
       }
     }
     if (robot_test_state ==6){      //first competetion breakaway point RESUME FROM HERE
-
     }
     else{
     if (robot_state == 2){     // back out of drop off
