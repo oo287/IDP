@@ -293,10 +293,15 @@ void loop() {                                                    // Function tha
   }
   else if (robot_test_state == 6) {
     if (tick_counter*tick_length > 3000) {
-      point_towards_nearest_dummy(4000,0.95,255);
-      Serial.println(max_IR_sensor_magnitude);
-      Serial.println(IR_sensor_magnitude);
-      Serial.println(dummy_located);
+      if (not dummy_located) {
+        point_towards_nearest_dummy(4000,0.95,100);
+      }
+      else {
+        drive_motor(left_motor,255,true);
+        drive_motor(right_motor,255,true);
+      }
+      
+      
     }
   }
 /*  else if (tick_length * tick_counter > 3000) {                    // main program
