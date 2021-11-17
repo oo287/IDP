@@ -297,7 +297,7 @@ void loop() {                                                    // Function tha
   else if (robot_test_state == 7) {
     if (tick_counter*tick_length > 3000) {
       if (not dummy_located) {
-        point_towards_nearest_dummy(8000,0.7,150);
+        point_towards_nearest_dummy(8000,0.5,150);
       }
       else {
         drive_motor(left_motor,255,false);
