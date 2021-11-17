@@ -267,20 +267,7 @@ void setup() {                                                   // Function tha
 
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
 void loop() {                                                    // Function that runs repeatedly whilst the robot is on
-  if (robot_test_state == -1) {                                  // Test -1: Display all sensor/input values
-    Serial.print("IR Amp: ");
-    Serial.print(measure_IR_amplitude(IR_AMP_PIN,107));          // IR Amplitude
-    Serial.print(" / 1023, US Dist: ");
-    Serial.print(take_ultrasonic_reading());                     // Ultrasonic distance
-    read_line_sensors();                                         // Update line sensors
-    Serial.print(" cm, LS1: ");
-    Serial.print(line_1);                                        // Print each line sensor boolean (true = on line, false = off line)
-    Serial.print(", LS2: ");
-    Serial.print(line_2);
-    Serial.print(", LS3: ");
-    Serial.println(line_3);
-  }
-  else if (robot_test_state == 1) {                              // Test 1: Spin the wheels without control of any kind
+  if (robot_test_state == 1) {                                   // Test 1: Spin the wheels without control of any kind
     if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
       drive_motor(left_motor,255,false);                         // Use the electrical function to spin each motor at max speed
       drive_motor(right_motor,255,false);
@@ -315,7 +302,11 @@ void loop() {                                                    // Function tha
       drive_motor(right_motor,255-255*(tick_counter*tick_length-3000)/3000,true);
     }
   }
-  else if (robot_test_state == 5) {                              // Test 5: Crash into dummy. Point at nearest dummy using IR and drive forwards. don't. stop.
+  else if (robot_test_state == 6) {                              // Test 6: 
+    Serial.println(measure_IR_amplitude(IR_AMP_PIN,107));
+    analogWrite(LED1_PIN,255);
+  }
+  else if (robot_test_state == 7) {
     if (tick_counter*tick_length > 3000) {
       if (not dummy_located) {
         point_towards_nearest_dummy(6000,0.7,150);
