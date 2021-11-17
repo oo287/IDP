@@ -189,10 +189,9 @@ bool point_towards_nearest_dummy(int sweep_time = 8000, float threshold = 0.9, i
       else {
         dummy_located = true;
         sweep_start_time = 0;
+        delay(1000000);
         drive_motor(left_motor_port, 0, true);                        
         drive_motor(right_motor_port, 0, true);
-        delay(1000000);
-        
       }
     }
     else if (tick_counter*tick_length > sweep_start_time + 2*sweep_time){
