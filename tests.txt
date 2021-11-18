@@ -2,5 +2,5 @@ Tests that the Robot has been programmed to run (loosely correspond to milestone
 1) Spin the wheels
 2+3) Move forwards ~1m and flash the orange LED. Can be used for moving over ramp test too
 4) Turn 360 clockwise, anticlockwise, reverse ~1m
-5) ???
+5) Turn towards nearest dummy and drive straight into it
 6) first competition plan: drive forward grab/push dummy into box (hopefully) do a 180 and drive back to the box
