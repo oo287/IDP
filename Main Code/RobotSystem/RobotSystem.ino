@@ -396,12 +396,12 @@ void loop() {                                                    // Function tha
 //        drive_motor(left_motor,255,false);
 //        drive_motor(right_motor,255,false);
 //        pick_up_dummy()
-//        if ((not line_1) and (not line_2) and (not line_3)){
+//        if ((not line_1) and (not line_2) and (not line_3)){      // back up untill we hit line
 //          drive_motor(left_motor,255,true);
 //          drive_motor(right_motor,255,true);
 //        }
 //        else{
-//         // straighten up
+//         // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
 //        }
 //      }
 //    } 
