@@ -44,8 +44,7 @@ bool dummy_located = false;                                      // If a dummy h
 unsigned long delay_5s_start_time = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
 unsigned long adjust_start_time = 0;                             // Timer used for the timing of the sweep in the adjust action 
-int home_adjust_distance = 20;
-int home_final_distance = 4; 
+int home_adjust_distance = 5;
 
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
@@ -147,18 +146,18 @@ void follow_line() {                                             // Function tha
     Serial.println("1");
   }
   else if ((not line_2) and (not line_1) and (not line_3)){      // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 50, false);
+    drive_motor(right_motor, 50, false);
     Serial.println("2");
   }                                                              
   else if ((line_1) and (not line_3)){                           // Hit line on LHS  so steering RIGHT
-    drive_motor(left_motor, 200, false);
+    drive_motor(left_motor, 110, false);
     drive_motor(right_motor, 255, false);
     Serial.println("3");
   }                                                              
   else if ((not line_1) and (line_3)){                           // Hit line on RHS  so steering LEFT
     drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 200, false);
+    drive_motor(right_motor, 110, false);
     Serial.println("4");
   }                                                              
   else if ((line_2) and (line_1) and (line_3)){                  // Hit horizontal line (return TRUE)
@@ -221,35 +220,29 @@ void point_towards_nearest_dummy(int sweep_time = 6000, float threshold = 0.7, i
   }
 }
 
-void home_dummy() {                                              // Algorithm to drive forwards and adjust so perfectly* in front of dummy
-
-  US_amplitude = take_ultrasonic_reading();                      // Update ultrasonic distance reading
-
-  if (US_amplitude > home_adjust_distance) {                     // If too far away to bother adjusting...
-    drive_motor(left_motor, 200, false);                         // ...just drive
-    drive_motor(right_motor, 200, false);
-  }
-  else {
-    if (adjust_start_time == 0) {
-      adjust_start_time = tick_counter*tick_length;
-      dummy_located = false;
-    }
-    else if (tick_counter*tick_length < adjust_start_time + 1000) {
-      drive_motor(left_motor, 100, false);
-      drive_motor(right_motor, 100, true)
-    }
-    else if (not dummy_located) {
-      point_towards_nearest_dummy(2000, 0.95, 100);
-    }
-    else if (dummy_located) {
-      if (US_amplitude > home_final_distance) {
-        drive_motor(left_motor, 150, false);
-        drive_motor(right_motor, 150, false);
-      }
-    }
-  }
-  
-}
+//void home_dummy() {                                              // Algorithm to drive forwards and adjust so perfectly* in front of dummy
+//
+//  US_amplitude = take_ultrasonic_reading();                      // Update ultrasonic distance reading
+//
+//  if (US_amplitude > home_adjust_distance) {                     // If too far away to bother adjusting...
+//    drive_motor(left_motor, 200, false);                         // ...just drive
+//    drive_motor(right_motor, 200, false);
+//  }
+//  else {
+//    if (adjust_start_time == 0) {
+//      adjust_start_time = tick_counter*tick_length;
+//      dummy_located = false;
+//    }
+//    else if (tick_counter*tick_length < adjust_start_time + 1000) {
+//      drive_motor(left_motor, 100, false);
+//      drive_motor(right_motor, 100, true)
+//    }
+//    else if (not dummy_located) {
+//      point_towards_nearest_dummy(2000, 0.95, 100);
+//    }
+//  }
+//  
+//}
 
 int identify_dummy(){                                            // Reads IR input signal and determines which dummy is in front of it 
   // write this when electrical sorted ir sensor

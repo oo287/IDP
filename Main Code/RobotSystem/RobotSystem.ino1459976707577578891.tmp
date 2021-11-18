@@ -3,7 +3,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 12;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 1;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
 unsigned const int tick_length = 20;                             // The length of one tick in milliseconds. Clock Frequency = 1/tick_length. Since IR sensor takes ~12ms, 20ms currently used
@@ -14,7 +14,7 @@ const int LM_port =  3;                                          // Motor shield
 const int RM_port = 4;                                           // Motor shield port that the right motor uses
 
 const int LED1_PIN = 6;                                          // Pin used for Orange LED (LED1)
-const int LED2_PIN = 3;                                          // Pin used for Red LED (LED2)
+const int LED2_PIN = 4;                                          // Pin used for Red LED (LED2)
 const int LED3_PIN = 5;                                          // Pin used for Green LED (LED2)
 const int LS1_PIN = A0;                                          // Pins used for Line Sensors (LS) 1, 2 and 3
 const int LS2_PIN = A2;
@@ -44,8 +44,7 @@ bool dummy_located = false;                                      // If a dummy h
 unsigned long delay_5s_start_time = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
 unsigned long adjust_start_time = 0;                             // Timer used for the timing of the sweep in the adjust action 
-int home_adjust_distance = 20;
-int home_final_distance = 4; 
+int home_adjust_distance = 5;
 
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
@@ -67,14 +66,14 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
 
   if (spd != 0) {                                                // If motor running at non-zero speed
     if (tick_counter*tick_length % 500 < 250) {                  // Use tick_counter*tick_length to set 500ms frequency for LED flashing
-      analogWrite(LED1_PIN,255);                                 // Write HIGH output to LED Pin 1 (orange LED)
+      digitalWrite(LED1_PIN,HIGH);                                 // Write HIGH output to LED Pin 1 (orange LED)
     }
     else if (tick_counter*tick_length % 500 > 249) {             // If in second half of 500ms time period (since 50% duty cycle)
-      analogWrite(LED1_PIN,0);                                   // Write LOW output to LED Pin 1 (orange LED)
+      digitalWrite(LED1_PIN,LOW);                                   // Write LOW output to LED Pin 1 (orange LED)
     }
   }
   else {
-    analogWrite(LED1_PIN,0);                                     // Turn orange LED off if not moving (writing spd = 0)
+    digitalWrite(LED1_PIN,LOW);                                     // Turn orange LED off if not moving (writing spd = 0)
   } 
 }
 
@@ -142,33 +141,33 @@ void follow_line() {                                             // Function tha
   
   read_line_sensors();                                           // Update line sensor booleans
   if ((line_2) and (not line_1) and (not line_3)){               // Default on the line, go straight ahead case
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 150, false);
+    drive_motor(right_motor, 150, false);
     Serial.println("1");
   }
   else if ((not line_2) and (not line_1) and (not line_3)){      // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 110, false);
+    drive_motor(right_motor, 110, false);
     Serial.println("2");
   }                                                              
   else if ((line_1) and (not line_3)){                           // Hit line on LHS  so steering RIGHT
-    drive_motor(left_motor, 200, false);
-    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 150, false);
+    drive_motor(right_motor, 110, false);
     Serial.println("3");
   }                                                              
   else if ((not line_1) and (line_3)){                           // Hit line on RHS  so steering LEFT
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 200, false);
+    drive_motor(left_motor, 110, false);
+    drive_motor(right_motor, 150, false);
     Serial.println("4");
   }                                                              
   else if ((line_2) and (line_1) and (line_3)){                  // Hit horizontal line (return TRUE)
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 150, false);
+    drive_motor(right_motor, 150, false);
     Serial.println("5");
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
-    drive_motor(right_motor, 255, false);
-    drive_motor(left_motor, 255, true);
+    drive_motor(right_motor, 50, false);
+    drive_motor(left_motor, 50, true);
     Serial.println("6");
   }
 }
@@ -221,35 +220,29 @@ void point_towards_nearest_dummy(int sweep_time = 6000, float threshold = 0.7, i
   }
 }
 
-void home_dummy() {                                              // Algorithm to drive forwards and adjust so perfectly* in front of dummy
-
-  US_amplitude = take_ultrasonic_reading();                      // Update ultrasonic distance reading
-
-  if (US_amplitude > home_adjust_distance) {                     // If too far away to bother adjusting...
-    drive_motor(left_motor, 200, false);                         // ...just drive
-    drive_motor(right_motor, 200, false);
-  }
-  else {
-    if (adjust_start_time == 0) {
-      adjust_start_time = tick_counter*tick_length;
-      dummy_located = false;
-    }
-    else if (tick_counter*tick_length < adjust_start_time + 1000) {
-      drive_motor(left_motor, 100, false);
-      drive_motor(right_motor, 100, true)
-    }
-    else if (not dummy_located) {
-      point_towards_nearest_dummy(2000, 0.95, 100);
-    }
-    else if (dummy_located) {
-      if (US_amplitude > home_final_distance) {
-        drive_motor(left_motor, 150, false);
-        drive_motor(right_motor, 150, false);
-      }
-    }
-  }
-  
-}
+//void home_dummy() {                                              // Algorithm to drive forwards and adjust so perfectly* in front of dummy
+//
+//  US_amplitude = take_ultrasonic_reading();                      // Update ultrasonic distance reading
+//
+//  if (US_amplitude > home_adjust_distance) {                     // If too far away to bother adjusting...
+//    drive_motor(left_motor, 200, false);                         // ...just drive
+//    drive_motor(right_motor, 200, false);
+//  }
+//  else {
+//    if (adjust_start_time == 0) {
+//      adjust_start_time = tick_counter*tick_length;
+//      dummy_located = false;
+//    }
+//    else if (tick_counter*tick_length < adjust_start_time + 1000) {
+//      drive_motor(left_motor, 100, false);
+//      drive_motor(right_motor, 100, true)
+//    }
+//    else if (not dummy_located) {
+//      point_towards_nearest_dummy(2000, 0.95, 100);
+//    }
+//  }
+//  
+//}
 
 int identify_dummy(){                                            // Reads IR input signal and determines which dummy is in front of it 
   // write this when electrical sorted ir sensor

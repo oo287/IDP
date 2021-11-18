@@ -242,10 +242,7 @@ void home_dummy() {                                              // Algorithm to
       point_towards_nearest_dummy(2000, 0.95, 100);
     }
     else if (dummy_located) {
-      if (US_amplitude > home_final_distance) {
-        drive_motor(left_motor, 150, false);
-        drive_motor(right_motor, 150, false);
-      }
+      if (US_amplitude > )
     }
   }
   
