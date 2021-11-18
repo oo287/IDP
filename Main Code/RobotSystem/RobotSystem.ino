@@ -39,7 +39,7 @@ bool dummy_located = false;                                      // If a dummy h
 
 
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
-unsigned long time_when_i_say_so = 0;
+unsigned long delay_5s_start_time = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
 
 
@@ -324,6 +324,8 @@ void loop() {                                                    // Function tha
         drive_motor(left_motor,255,false);
         drive_motor(right_motor,255,false);
       }
+    }
+  }
   else if (robot_test_state == 12) {                             // Test 12: Follow line
     if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
       follow_line();                                             // Just run the follow_line() function
@@ -331,9 +333,8 @@ void loop() {                                                    // Function tha
   }
       
       
-    }
-  }
-/*  else if (tick_length * tick_counter > 3000) {                    // main program
+
+  else if (tick_length * tick_counter > 3000) {                    // main program
    if (robot_state == 0){                                        // starting sequence -> pick up first dummy
      if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
        follow_line();
@@ -348,9 +349,10 @@ void loop() {                                                    // Function tha
          which_dummy_am_I = identify_dummy();
          picked_up_yet = pick_up_dummy();
        }
-       if (picked_up_yet == true){
+       if (picked_up_yet){
          time_when_i_say_so = 0;
          robot_state = 1;
+         picked_up_yet = false;
        }
      }
    }
@@ -362,44 +364,46 @@ void loop() {                                                    // Function tha
       if (horizontal_line){
         finished_dropping = drop_off_dummy();
       }
-      if (finished_dropping == true){
+      if (finished_dropping){
         robot_state == 2;
-        finished_dropping = false
+        finished_dropping = false;
       }
     }
-    if (robot_test_state ==6){      //first competetion breakaway point RESUME FROM HERE
+    if (robot_test_state == 6){      //first competetion breakaway point RESUME FROM HERE
+      // turn 180 and drive back to start
     }
     else{
-    if (robot_state == 2){     // back out of drop off
-      if (time_when_i_say_so == 0){
-        time_when_i_say_so = tick_counter * tick_length;
+      if (robot_state == 2){     // back out of drop off
+        if (delay_5s_start_time == 0){
+          delay_5s_start_time = tick_counter * tick_length;
+        }
+        else if (tick_counter * tick_length < delay_5s_start_time + 3000){
+          drive_motor(left_motor,255,true);
+          drive_motor(right_motor,255,true);
+        }
+        else{
+          robot_state = 3;
+          delay_5s_start_time =0;
+        }
       }
-      else if (tick_counter * tick_length < time_when_i_say_so + 1000){
-        drive_motor(left_motor,255,true);
-        drive_motor(right_motor,255,true);
+    
+    if (robot_state == 3){                                       //find 2nd dummy
+      point_towards_nearest_dummy();
+      if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us to the dummy
+        drive_motor(left_motor,255,false);
+        drive_motor(right_motor,255,false);
+        pick_up_dummy()
+        if ((not line_1) and (not line_2) and (not line_3)){
+          drive_motor(left_motor,255,true);
+          drive_motor(right_motor,255,true);
+        }
+        else{
+         // straighten up
+        }
       }
-      else{
-       robot_state = 3;
-      }
-    }
-   
-   if (robot_state == 3){                                       //find 2nd dummy
-     point_towards_nearest_dummy();
-     if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us to the dummy
-       drive_motor(left_motor,255,false);
-       drive_motor(right_motor,255,false);
-       pick_up_dummy()
-       if ((not line_1) and (not line_2) and (not line_3)){
-         drive_motor(left_motor,255,true);
-         drive_motor(right_motor,255,true);
-       }
-       else{
-       
-       }
-     }
-   } 
- }
- } */
+    } 
+  }
+ } 
 
   tick_counter ++;                                               // Increment tick counter
   delay(tick_length - (millis() % tick_length));                 // Delay the remaining milliseconds of the tick to keep tick rate constant (as long as computer fast enough)
