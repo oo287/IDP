@@ -152,13 +152,13 @@ void follow_line() {                                             // Function tha
     Serial.println("2");
   }                                                              
   else if ((line_1) and (not line_3)){                           // Hit line on LHS  so steering RIGHT
-    drive_motor(left_motor, 150, false);
+    drive_motor(left_motor, 200, false);
     drive_motor(right_motor, 255, false);
     Serial.println("3");
   }                                                              
   else if ((not line_1) and (line_3)){                           // Hit line on RHS  so steering LEFT
     drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 150, false);
+    drive_motor(right_motor, 200, false);
     Serial.println("4");
   }                                                              
   else if ((line_2) and (line_1) and (line_3)){                  // Hit horizontal line (return TRUE)
@@ -234,24 +234,21 @@ void home_dummy() {                                              // Algorithm to
       adjust_start_time = tick_counter*tick_length;              // Set start time to current time
       dummy_located = false;                                     // Declare that dummy not found
     }
-    else if (tick_counter*tick_length<adjust_start_time+1000) {  // For [1] second(s) after starting:
-      drive_motor(left_motor, 100, false);                       // Turn clockwise slowly
-      drive_motor(right_motor, 100, true);
+    else if (tick_counter*tick_length<adjust_start_time+1000){   // For [1] second(s) after starting:
+      drive_motor(left_motor, 100, false);                       // Turn clockwise
+      drive_motor(right_motor, 100, true)
     }
-    else if (not dummy_located) {                                // After the first sweep, start sweeping for dummy slowly and only in the small angle range
-      point_towards_nearest_dummy(2000, 0.95, 100);              // [2] second(s), High threshold, slowly
+    else if (not dummy_located) {
+      point_towards_nearest_dummy(2000, 0.95, 100);
     }
-    else if (dummy_located) {                                    // After finding dummy again...
-      if (US_amplitude > home_final_distance) {                  // ...drive until at final distance and stop
+    else if (dummy_located) {
+      if (US_amplitude > home_final_distance) {
         drive_motor(left_motor, 150, false);
         drive_motor(right_motor, 150, false);
       }
-      else {
-        drive_motor(left_motor, 0, false);
-        drive_motor(right_motor, 0 , false);
-      }
     }
-  } 
+  }
+  
 }
 
 int identify_dummy(){                                            // Reads IR input signal and determines which dummy is in front of it 
