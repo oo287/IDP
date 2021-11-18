@@ -1,6 +1,9 @@
 Tests that the Robot has been programmed to run (loosely correspond to milestones)
+-1) Display US, IR amp, LS. All outputs to Serial monitor
+0) Current action plan. Competition code. Currently: drive forward grab/push dummy into box (hopefully) do a 180 and drive back to the box
 1) Spin the wheels
 2+3) Move forwards ~1m and flash the orange LED. Can be used for moving over ramp test too
 4) Turn 360 clockwise, anticlockwise, reverse ~1m
 5) Turn towards nearest dummy and drive straight into it
-6) first competition plan: drive forward grab/push dummy into box (hopefully) do a 180 and drive back to the box
+12) Follow line test. Just runs follow_line(false), meaning follow line forwards (reversed = false)
+20) Demo of reversible follow_line(). Uses either IR or US to detect dummy and change direction to 'run away'

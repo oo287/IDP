@@ -367,22 +367,6 @@ void loop() {                                                    // Function tha
       follow_line(false);                                        // Just run the follow_line() function (forwards)
     }
   }
-  else if (robot_test_state == 20) {
-    if (scared == 2) {
-      scared = 0;
-    }
-    if (tick_counter*tick_length > 3000) {
-      if (measure_IR_amplitude < 200 and take_ultrasonic_reading > 20 and scared == 0) {
-        follow_line(false);
-      }
-      else {
-        if (scared == 0) {
-          scared = 1;
-        }
-        follow_line(true);
-      }
-    }
-  }
       
       
 
