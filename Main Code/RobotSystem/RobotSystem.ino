@@ -139,12 +139,12 @@ void read_line_sensors() {                                       // Update the b
 
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
-void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
+bool follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
   
   read_line_sensors();                                           // Update line sensor booleans
   
   if ((line_2) and (not line_1) and (not line_3)){               // Default on the line, go straight ahead case
-    drive_motor(left_motor, 255, false);                      // Function should work exactly the same if all directions reversed in order to drive backwards along the line
+    drive_motor(left_motor, 255, false);
     drive_motor(right_motor, 255, false);
   }
   else if ((not line_2) and (not line_1) and (not line_3)){      // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
@@ -162,11 +162,13 @@ void follow_line() {                                             // Function tha
   else if ((line_2) and (line_1) and (line_3)){                  // Hit horizontal line (return TRUE)
     drive_motor(left_motor, 255, false);
     drive_motor(right_motor, 255, false);
+    return true;
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
     drive_motor(right_motor, 255, false);
     drive_motor(left_motor, 255, true);
   }
+  return false;
 }
 
                                                                  // Function to: Stop, spin on the spot, turn towards brighest dummy seen, stop again and set dummy_located = true
@@ -374,7 +376,7 @@ void loop() {                                                    // Function tha
     }
     if (tick_counter*tick_length > 3000) {
       if (measure_IR_amplitude < 200 and take_ultrasonic_reading > 20 and scared == 0) {
-        follow_line(false);
+        follow_line();
       }
       else {
         if (scared == 0) {
@@ -390,7 +392,7 @@ void loop() {                                                    // Function tha
 //  else if (tick_length * tick_counter > 3000) {                    // main program
 //   if (robot_state == 0){                                        // starting sequence -> pick up first dummy
 //     if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
-//       follow_line(false);
+//       follow_line();
 //     }
 //     else {
 //       drive_motor(left_motor,0,true);                                    
@@ -411,8 +413,8 @@ void loop() {                                                    // Function tha
 //   }
 // 
 //    if (robot_state == 1){      //picked up first dummy and drop it off
-//      if (not follow_line(false)){
-//        horizontal_line = follow_line(false)
+//      if (not follow_line()){
+//        horizontal_line = follow_line()
 //      }
 //      if (horizontal_line){
 //        finished_dropping = drop_off_dummy();
