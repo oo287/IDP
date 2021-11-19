@@ -9,6 +9,8 @@
 
 #include <Servo.h>
 
+float timer = 0;
+
 Servo myservo;  // create servo object to control a servo
 // twelve servo objects can be created on most boards
 
@@ -27,6 +29,8 @@ void loop() {
   }
   myservo.write(angle);              // tell servo to go to position in variable 'pos'
   delay(15);                       // waits 15ms for the servo to reach the position
+
+  timer += 0.01
   
 
 }

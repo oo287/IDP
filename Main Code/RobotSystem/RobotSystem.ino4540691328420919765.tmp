@@ -408,7 +408,7 @@ void loop() {                                                    // Function tha
         
       }
       else if (tick_counter*tick_length % 6000 <= 3000) {
-        claw_servo.write(tick_counter*tick_length%6000); // Unfinished
+        claw_servo.write(tick_counter*tick_length)
       }
     }
   }

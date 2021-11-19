@@ -45,10 +45,6 @@ bool dummy_located = false;                                      // If a dummy h
 
 int scared = 2;
 
-int claw_servo_angle = 20;                                       // Angle for claw servo
-int lift_servo_angle = 20;                                       // Angle for lift servo
-
-
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
 unsigned long delay_5s_start_time = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
@@ -65,12 +61,6 @@ const int motor_360_speed = 100;                                 // Motor speed 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();              // Create motorshield object called 'AFMS' with default I2C address. Put I2C address in brackets if different address needed
 Adafruit_DCMotor *left_motor = AFMS.getMotor(LM_port);           // Initialise left  motor using assigned motor shield port
 Adafruit_DCMotor *right_motor = AFMS.getMotor(RM_port);          // Initialise right motor using assigned motor shield port
-
-Servo claw_servo;                                                // Servo for grabbing dummy
-Servo lift_servo;                                                // Servo for lifting claw
-
-claw_servo.attach(SERVO_1_PIN);
-lift_servo.attach(SERVO_2_PIN);
 
 
 // --------- Electrical Functions ---------                      // --------- Electrical Functions ---------
@@ -403,14 +393,7 @@ void loop() {                                                    // Function tha
     }
   }
   else if (robot_test_state == 9) {
-    if (tick_counter*tick_length > 3000) {
-      if (tick_counter*tick_length % 6000 > 3000) { 
-        
-      }
-      else if (tick_counter*tick_length % 6000 <= 3000) {
-        claw_servo.write(tick_counter*tick_length%6000); // Unfinished
-      }
-    }
+    
   }
   else if (robot_test_state == 12) {                             // Test 12: Follow line
     if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test

@@ -45,10 +45,6 @@ bool dummy_located = false;                                      // If a dummy h
 
 int scared = 2;
 
-int claw_servo_angle = 20;                                       // Angle for claw servo
-int lift_servo_angle = 20;                                       // Angle for lift servo
-
-
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
 unsigned long delay_5s_start_time = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
@@ -69,9 +65,7 @@ Adafruit_DCMotor *right_motor = AFMS.getMotor(RM_port);          // Initialise r
 Servo claw_servo;                                                // Servo for grabbing dummy
 Servo lift_servo;                                                // Servo for lifting claw
 
-claw_servo.attach(SERVO_1_PIN);
-lift_servo.attach(SERVO_2_PIN);
-
+claw_servo
 
 // --------- Electrical Functions ---------                      // --------- Electrical Functions ---------
 void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical function that drives a single motor. motor: 0=Left,1=Right; spd: 0-255; rev: bool, true = Reverse
@@ -403,14 +397,7 @@ void loop() {                                                    // Function tha
     }
   }
   else if (robot_test_state == 9) {
-    if (tick_counter*tick_length > 3000) {
-      if (tick_counter*tick_length % 6000 > 3000) { 
-        
-      }
-      else if (tick_counter*tick_length % 6000 <= 3000) {
-        claw_servo.write(tick_counter*tick_length%6000); // Unfinished
-      }
-    }
+    
   }
   else if (robot_test_state == 12) {                             // Test 12: Follow line
     if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
