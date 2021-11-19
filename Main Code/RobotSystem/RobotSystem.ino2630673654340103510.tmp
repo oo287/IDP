@@ -256,23 +256,23 @@ void home_dummy() {                                              // Algorithm to
   } 
 }
 
-bool turn(int angle, bool clockwise) {                           // Turns a set angle. Should be accurate since uses carefully calibrated motor speed + turn time. Returns true when done
+bool turn(int angle, bool clockwise) {                           // Turns a set angle. Should be accurate since uses carefully calibrated motor speed + turn time
 
-  if (turn_timer == 0) {                                         // If haven't started turning yet
+  if (turn_timer == 0) {
 
-    turn_timer = tick_counter*tick_length;                       // Set current time to turn start time
+    turn_timer = tick_counter*tick_length;
     
   }
   else if (tick_counter*tick_length < turn_timer + (angle/full_360_time)) {
-    drive_motor(left_motor, motor_360_speed, not clockwise);     // Drive for the correct proportion of a 360 turn at the calibrated speed
+    drive_motor(left_motor, motor_360_speed, not clockwise);
     drive_motor(right_motor, motor_360_speed, clockwise);
-    return false;                                                // Not done yet so return false
+    return false;
   }
   else {
-    drive_motor(left_motor, 0, false);                           // Stop motors
+    drive_motor(left_motor, 0, false);
     drive_motor(right_motor, 0, false);
-    return true;                                                 // Done so return true
   }
+   
 }
 
 int identify_dummy(){                                            // Reads IR input signal and determines which dummy is in front of it 
