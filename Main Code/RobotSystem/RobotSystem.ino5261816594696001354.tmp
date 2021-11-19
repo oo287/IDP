@@ -139,33 +139,45 @@ void read_line_sensors() {                                       // Update the b
 
 
 // --------- Software Functions ---------                        // --------- Software Functions ---------
-void follow_line() {                                             // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
+void follow_line(bool reversed = false) {                        // Function that drives the motors and uses line sensors to move allow the line. Doesn't take inputs to stop (only call this function if the path is clear) ouput true when hits horizontal line
   
   read_line_sensors();                                           // Update line sensor booleans
   
   if ((line_2) and (not line_1) and (not line_3)){               // Default on the line, go straight ahead case
-    drive_motor(left_motor, 255, false);                      // Function should work exactly the same if all directions reversed in order to drive backwards along the line
-    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 255, reversed);                      // Function should work exactly the same if all directions reversed in order to drive backwards along the line
+    drive_motor(right_motor, 255, reversed);
   }
   else if ((not line_2) and (not line_1) and (not line_3)){      // Central detector off line but niether side on line yet but carry on straight (this shouldn't happen normally)
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 255, reversed);
+    drive_motor(right_motor, 255, reversed);
   }                                                              
   else if ((line_1) and (not line_3)){                           // Hit line on LHS  so steering RIGHT
-    drive_motor(left_motor, 150, false);
-    drive_motor(right_motor, 255, false);
+    if (not reversed) {
+      drive_motor(left_motor, 150, reversed);
+      drive_motor(right_motor, 255, reversed);
+    }
+    else {
+      drive_motor(left_motor, 255, reversed);
+      drive_motor(right_motor, 150, reversed);
+    }
   }                                                              
   else if ((not line_1) and (line_3)){                           // Hit line on RHS  so steering LEFT
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 150, false);
+    if (not reversed) {
+      drive_motor(left_motor, 255, reversed);
+      drive_motor(right_motor, 150, reversed);
+    }
+    else {
+      drive_motor(left_motor, 150, reversed);
+      drive_motor(right_motor, 255, reversed);
+    }
   }                                                              
   else if ((line_2) and (line_1) and (line_3)){                  // Hit horizontal line (return TRUE)
-    drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 255, reversed);
+    drive_motor(right_motor, 255, reversed);
   }
   else{                                                          // Some funky angles going on here, not an ideal case just sorta spin a'c'wise I guess
-    drive_motor(right_motor, 255, false);
-    drive_motor(left_motor, 255, true);
+    drive_motor(right_motor, 255, reversed);
+    drive_motor(left_motor, 255, not reversed);
   }
 }
 
