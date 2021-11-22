@@ -35,6 +35,7 @@ int US_amplitude;                                                // Distance rec
 bool horizontal_line = false;
 bool finished_dropping = false;
 bool picked_up_yet = false;
+bool turned_yet = false;
 bool are_we_pointing_at_dummy =false;
 int what_dummy_am_I;                                             // The dummy that is detected (0 for line, 1 for red box, 2 for blue box)
 bool dummy_located = false;                                      // If a dummy has been spotted using IR amplitude or not
@@ -44,7 +45,6 @@ int scared = 2;
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
 unsigned long delay_5s_start_time = 0;
 unsigned long reverse_3s = 0;
-unsigned long turn_180_timer = 0;
 unsigned long drive_1s_timer = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
 unsigned long adjust_start_time = 0;                             // Timer used for the timing of the sweep in the adjust action 
@@ -279,7 +279,31 @@ bool turn(int angle, bool clockwise) {                           // Turns a set 
     return true;                                                 // Done so return true
   }
 }
-
+bool turn_onto_line(){
+  if (line1){                                                    //if left line sensor on turn to left just as shorter
+    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 255, true);
+    return false;
+  }
+  else if (line3){                                               //if right line sensor on turn right
+    drive_motor(right_motor, 255, true);
+    drive_motor(left_motor, 255, false);
+    return false;
+  }
+  else if (not line_2){                                           // drive forward back onto line           
+    drive_motor(right_motor, 255, false);
+    drive_motor(left_motor, 255, false);
+    return false;
+  }
+  else if ((line_2) and (not line_1) and (not line_3){
+    drive_motor(right_motor, 0, false);
+    drive_motor(left_motor, 0, false);
+    return true;
+  }
+  else{
+    return false;
+  }
+}
 int identify_dummy(){                                            // Reads IR input signal and determines which dummy is in front of it 
   // write this when electrical sorted ir sensor
 }
@@ -403,7 +427,7 @@ void loop() {                                                    // Function tha
       scared = 0;
     }
     if (tick_counter*tick_length > 3000) {
-      if (measure_IR_amplitude < 200 and take_ultrasonic_reading > 20 and scared == 0) {
+      if (measure_IR_amplitude() < 200 and take_ultrasonic_reading() > 20 and scared == 0) {
         follow_line();
       }
       else {
@@ -466,29 +490,29 @@ void loop() {                                                    // Function tha
        }
      }
 
-    if (robot_test_state == 6 and robot_state == 3){             //first competetion breakaway point RESUME FROM HERE
-      if (turn_180_timer = 0){
-        turn_180_timer = tick_counter * tick_length; 
-      }                                                          //180 turn
-      else if (tick_length * tick_counter < turn_180_timer + full_360_time / 2){
-        drive_motor(left_motor, 255, true);
-        drive_motor(right_motor, 255, false);
+    if ((robot_test_state == 6) and (robot_state == 3)){         //first competetion breakaway point RESUME FROM HERE
+      if ((not turn(180)) and (not turned_yet)){
       }
-      else if (not follow_line(){                                \
-        follow_line();
+      else{
+        turned_yet = true;
+        robot_state = 3.1;
       }
-      else if (follow_line()){
+
+    if ((robot_test_state == 6) and (robot_state == 3.1))        //succesfully turned 180 to face back to start (still competition breakaway)
+      if (not follow_line(){                                     //drive back to start
+      }
+      else if (follow_line()){                                   //count when over first cross roads
         hit_cross_roads += 1;
       }
       else if (hit_cross_roads == 2){
         if (drive_1s_timer = 0){
           drive_1s_timer = tick_counter * tick_length; 
-        }                                                        //drive 1s forward into box
+        }                                                        //drive 1s forward into box from top of box
         else if (tick_length * tick_counter < drive_1s_timer + 1000){
           drive_motor(left_motor, 255, true);
           drive_motor(right_motor, 255, true);
         }
-        else{         
+        else{                                                    //stop
           drive_motor(left_motor, 0, true);
           drive_motor(right_motor, 0, true);
         }
@@ -505,11 +529,28 @@ void loop() {                                                    // Function tha
         drive_motor(left_motor,255,true);
         drive_motor(right_motor,255,true);
       }
-      else{ 
+      else if(not turn_onto_line(){ 
+        turn_onto_line()
         // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
       }
+      else if(turn_onto_line()){
+        robot_state = 4;
+        picked_up_yet = false
       }
     } 
+
+    if (robot_state == 4){
+      if (take_ultrasonic_reading() < 100){
+        while (not turn(180)){                                   //remove this or face ollie's wrath
+        }
+      }
+      else if (not follow_line()){
+      }
+      else{
+        turn(90);
+        drop_off_dummy();
+      }
+    }
   }
 
   tick_counter ++;                                               // Increment tick counter
