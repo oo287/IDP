@@ -35,14 +35,17 @@ int US_amplitude;                                                // Distance rec
 bool horizontal_line = false;
 bool finished_dropping = false;
 bool picked_up_yet = false;
-
+bool are_we_pointing_at_dummy =false;
 int what_dummy_am_I;                                             // The dummy that is detected (0 for line, 1 for red box, 2 for blue box)
 bool dummy_located = false;                                      // If a dummy has been spotted using IR amplitude or not
-
+int hit_cross_roads =0;                                          // used in test state 6 (first competition) to detect when hit cross roads and ignore it and carry on
 int scared = 2;
 
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
 unsigned long delay_5s_start_time = 0;
+unsigned long reverse_3s = 0;
+unsigned long turn_180_timer = 0;
+unsigned long drive_1s_timer = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
 unsigned long adjust_start_time = 0;                             // Timer used for the timing of the sweep in the adjust action 
 int home_adjust_distance = 20;
@@ -223,7 +226,7 @@ void point_towards_nearest_dummy(int sweep_time = 6000, float threshold = 0.7, i
   }
 }
 
-void home_dummy() {                                              // Algorithm to drive forwards and adjust so perfectly* in front of dummy
+bool home_dummy() {                                              // Algorithm to drive forwards and adjust so perfectly* in front of dummy
 
   US_amplitude = take_ultrasonic_reading();                      // Update ultrasonic distance reading
 
@@ -251,9 +254,11 @@ void home_dummy() {                                              // Algorithm to
       else {
         drive_motor(left_motor, 0, false);
         drive_motor(right_motor, 0 , false);
+        return true;
       }
     }
   } 
+  return false;
 }
 
 bool turn(int angle, bool clockwise) {                           // Turns a set angle. Should be accurate since uses carefully calibrated motor speed + turn time. Returns true when done
@@ -410,78 +415,102 @@ void loop() {                                                    // Function tha
     }
   }
       
-      
+  else if (tick_length * tick_counter > 3000) {                  // main program
+    if (robot_state == 0){                                       // starting sequence -> pick up first dummy
+      if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1023)){                  // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+        follow_line();
+      }
+      else {
+        drive_motor(left_motor,0,true);                                    
+        drive_motor(right_motor,0,true);
+        if (delay_5s_start_time == 0){
+          delay_5s_start_time = tick_counter*tick_length;
+        }
+        if (tick_length * tick_counter > delay_5s_start_time + 5000){
+          which_dummy_am_I = identify_dummy();
+          picked_up_yet = pick_up_dummy();
+        }
+        if (picked_up_yet){
+          delay_5s_start_time = 0;
+          robot_state = 1;
+          picked_up_yet = false;
+        }
+      }
+    }
 
-//  else if (tick_length * tick_counter > 3000) {                    // main program
-//   if (robot_state == 0){                                        // starting sequence -> pick up first dummy
-//     if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
-//       follow_line();
-//     }
-//     else {
-//       drive_motor(left_motor,0,true);                                    
-//       drive_motor(right_motor,0,true);
-//       if (time_when_i_say_so == 0){
-//         time_when_i_say_so = tick_counter*tick_length;
-//       }
-//       if (tick_length * tick_counter > time_when_i_say_so + 5000){
-//         which_dummy_am_I = identify_dummy();
-//         picked_up_yet = pick_up_dummy();
-//       }
-//       if (picked_up_yet){
-//         time_when_i_say_so = 0;
-//         robot_state = 1;
-//         picked_up_yet = false;
-//       }
-//     }
-//   }
-// 
-//    if (robot_state == 1){      //picked up first dummy and drop it off
-//      if (not follow_line()){
-//        horizontal_line = follow_line()
-//      }
-//      if (horizontal_line){
-//        finished_dropping = drop_off_dummy();
-//      }
-//      if (finished_dropping){
-//        robot_state == 2;
-//        finished_dropping = false;
-//      }
-//    }
-//    if (robot_test_state == 6){      //first competetion breakaway point RESUME FROM HERE
-//      // turn 180 and drive back to start
-//    }
-//    else{
-//      if (robot_state == 2){     // back out of drop off
-//        if (delay_5s_start_time == 0){
-//          delay_5s_start_time = tick_counter * tick_length;
-//        }
-//        else if (tick_counter * tick_length < delay_5s_start_time + 3000){
-//          drive_motor(left_motor,255,true);
-//          drive_motor(right_motor,255,true);
-//        }
-//        else{
-//          robot_state = 3;
-//          delay_5s_start_time =0;
-//        }
-//      }
-//    
-//    if (robot_state == 3){                                       //find 2nd dummy
-//      point_towards_nearest_dummy();
-//      if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1024)){                        // this should drive us to the dummy
-//        drive_motor(left_motor,255,false);
-//        drive_motor(right_motor,255,false);
-//        pick_up_dummy()
-//        if ((not line_1) and (not line_2) and (not line_3)){      // back up untill we hit line
-//          drive_motor(left_motor,255,true);
-//          drive_motor(right_motor,255,true);
-//        }
-//        else{
-//         // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
-//        }
-//      }
-//    } 
-//  }
-// } 
+    if (robot_state == 1){                                       //picked up first dummy and drop it off
+      if (not follow_line()){
+        horizontal_line = follow_line()
+      }
+      if (horizontal_line){
+        finished_dropping = drop_off_dummy();
+      }
+      if (finished_dropping){
+        robot_state == 2;
+        finished_dropping = false;
+        horizontal_line = false;
+      }
+    }
+
+    if (robot_state == 2){                                       // back out of drop off
+       if (reverse_3s == 0){
+         reverse_3s = tick_counter * tick_length;
+       }                                                         //reverse for 2s
+       else if (tick_counter * tick_length < reverse_3s + 2000){
+         drive_motor(left_motor,255,true);
+         drive_motor(right_motor,255,true);
+       }
+       else{
+         robot_state = 3;
+         reverse_3s = 0;
+       }
+     }
+
+    if (robot_test_state == 6 and robot_state == 3){             //first competetion breakaway point RESUME FROM HERE
+      if (turn_180_timer = 0){
+        turn_180_timer = tick_counter * tick_length; 
+      }                                                          //180 turn
+      else if (tick_length * tick_counter < turn_180_timer + full_360_time / 2){
+        drive_motor(left_motor, 255, true);
+        drive_motor(right_motor, 255, false);
+      }
+      else if (not follow_line(){                                \
+        follow_line();
+      }
+      else if (follow_line()){
+        hit_cross_roads += 1;
+      }
+      else if (hit_cross_roads == 2){
+        if (drive_1s_timer = 0){
+          drive_1s_timer = tick_counter * tick_length; 
+        }                                                        //drive 1s forward into box
+        else if (tick_length * tick_counter < drive_1s_timer + 1000){
+          drive_motor(left_motor, 255, true);
+          drive_motor(right_motor, 255, true);
+        }
+        else{         
+          drive_motor(left_motor, 0, true);
+          drive_motor(right_motor, 0, true);
+        }
+      }
+    }
+
+    if (robot_state == 3){                                       //find 2nd dummy
+      if (not home_dummy()){                                     //home dummy?
+      }
+      else{
+        picked_up_yet = pick_up_dummy();
+      }
+      if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
+        drive_motor(left_motor,255,true);
+        drive_motor(right_motor,255,true);
+      }
+      else{ 
+        // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
+      }
+      }
+    } 
+  }
 
   tick_counter ++;                                               // Increment tick counter
   delay(tick_length - (millis() % tick_length));                 // Delay the remaining milliseconds of the tick to keep tick rate constant (as long as computer fast enough)
