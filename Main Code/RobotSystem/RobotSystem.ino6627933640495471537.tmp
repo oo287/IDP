@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 5;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 25;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
 unsigned const int tick_length = 20;                             // The length of one tick in milliseconds. Clock Frequency = 1/tick_length. Since IR sensor takes ~12ms, 20ms currently used
@@ -45,6 +45,9 @@ int what_dummy_am_I;                                             // The dummy th
 bool dummy_located = false;                                      // If a dummy has been spotted using IR amplitude or not
 int hit_cross_roads =0;                                          // used in test state 6 (first competition) to detect when hit cross roads and ignore it and carry on
 int scared = 2;
+
+int claw_servo_angle = 20;                                       // Angle for claw servo
+int lift_servo_angle = 20;                                       // Angle for lift servo
 
 
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
@@ -389,10 +392,6 @@ void setup() {                                                   // Function tha
 
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
 void loop() {                                                    // Function that runs repeatedly whilst the robot is on
-  if (robot_test_state != 25) {
-    claw_servo.write(20);
-    lift_servo.write(150);
-  }
   if (robot_test_state == -1) {                                  // Test -1: Display all sensor/input values
     Serial.print("IR Amp: ");
     Serial.print(measure_IR_amplitude(107));                     // IR Amplitude
@@ -450,7 +449,7 @@ void loop() {                                                    // Function tha
   else if (robot_test_state == 5) {                              // Test 5: Crash into dummy. Point at nearest dummy using IR and drive forwards. don't. stop.
     if (tick_counter*tick_length > 3000) {
       if (not dummy_located) {
-        point_towards_nearest_dummy(10000,0.9,150);
+        point_towards_nearest_dummy(6000,0.7,150);
       }
       else {
         drive_motor(left_motor,255,false);
@@ -465,46 +464,13 @@ void loop() {                                                    // Function tha
       lift_servo.write(150);
     }
     else if (tick_counter*tick_length < 6000) {
-      claw_servo.write(70);
+      claw_servo.write(50);
       lift_servo.write(150);
     }
     else if (tick_counter*tick_length < 9000) {
-      claw_servo.write(70);
-      lift_servo.write(70);
+      claw_servo.write(50);
+      lift_servo.write(110);
     }
-    else if (tick_counter*tick_length < 12000) {
-      claw_servo.write(70);
-      lift_servo.write(70);
-      drive_motor(right_motor,255,false);
-      drive_motor(left_motor,255,false);
-    }
-    else if (tick_counter*tick_length < 15000) {
-      drive_motor(right_motor,0,false);
-      drive_motor(left_motor,0,false);
-      claw_servo.write(70);
-      lift_servo.write(125);
-    }
-    else if (tick_counter*tick_length < 18000) {
-      claw_servo.write(20);
-      lift_servo.write(130);
-    }
-    else if (tick_counter*tick_length < 21000) {
-      claw_servo.write(20);
-      lift_servo.write(150);
-    }
-    else if (tick_counter*tick_length < 24000) {
-      claw_servo.write(20);
-      lift_servo.write(150);
-      drive_motor(right_motor,255,true);
-      drive_motor(left_motor,255,true);
-    }
-    else if (tick_counter*tick_length < 25000) {
-      claw_servo.write(20);
-      lift_servo.write(150);
-      drive_motor(right_motor,0,true);
-      drive_motor(left_motor,0,true);
-    }
-    
     
     
   }
