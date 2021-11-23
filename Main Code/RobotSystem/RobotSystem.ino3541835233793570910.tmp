@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 25;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 12;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
 unsigned const int tick_length = 20;                             // The length of one tick in milliseconds. Clock Frequency = 1/tick_length. Since IR sensor takes ~12ms, 20ms currently used
@@ -24,8 +24,8 @@ const int TRIG_PIN = 12;                                         // TRIG and ECH
 const int ECHO_PIN = 13;
 const int IR_AMP_PIN = A3;                                       // Pin used to read the amplitude of the IR signal
 const int MOD_PIN = 7;                                           // IR to detect modulation and hence identify dummeis
-const int SERVO_1_PIN = 10;                                      // Claw grab servo
-const int SERVO_2_PIN = 9;                                       // Claw lift servo
+const int SERVO_1_PIN = 9;                                       // Claw grab servo
+const int SERVO_2_PIN = 10;                                      // Claw lift servo
 
 
 // --------- Sensor Variables ---------                          // --------- Sensor Variables ---------
@@ -69,8 +69,11 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();              // Create motor
 Adafruit_DCMotor *left_motor = AFMS.getMotor(LM_port);           // Initialise left  motor using assigned motor shield port
 Adafruit_DCMotor *right_motor = AFMS.getMotor(RM_port);          // Initialise right motor using assigned motor shield port
 
-Servo claw_servo;                                                // Servo for grabbing dummy
-Servo lift_servo;                                                // Servo for lifting claw
+//Servo claw_servo;                                                // Servo for grabbing dummy
+//Servo lift_servo;                                                // Servo for lifting claw
+//
+//claw_servo.attach(SERVO_1_PIN);
+//lift_servo.attach(SERVO_2_PIN);
 
 
 // --------- Electrical Functions ---------                      // --------- Electrical Functions ---------
@@ -100,12 +103,12 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
                                                                  // Function to record voltage amplitude of IR sensor 10% duty cycle signal
                                                                  // IR_PIN must be an analog pin for any non-binary results.
                                                                  // Wave is ~6ms long, and samples take ~ 112us, so set samples to AT LEAST >54 to ensure peak is included in measurement (preferably > 108)
-int measure_IR_amplitude(int samples = 107) {                    // CODE IS BLOCKING TO ALLOW FAST SAMPLING RATE - blocking time will increase linearly with samples
+int measure_IR_amplitude(int IR_PIN, int samples) {              // CODE IS BLOCKING TO ALLOW FAST SAMPLING RATE - blocking time will increase linearly with samples
   
   int max_val = 0;                                               // Variable to store max. voltage measured
   int new_val;                                                   // Variable to store current measurement
   for (int i=0; i<samples; i++) {
-    new_val = analogRead(IR_AMP_PIN);                            // Measure current voltage from photodiode
+    new_val = analogRead(IR_PIN);                                // Measure current voltage from photodiode
     if (new_val > max_val) {
       max_val = new_val;                                         // Update maximum recorded value if it is new highest
     }
@@ -204,7 +207,7 @@ void point_towards_nearest_dummy(int sweep_time = 6000, float threshold = 0.7, i
     drive_motor(left_motor, motor_sweep_speed, true);            // Drive left in reverse, right forwards to turn counter-clockwise (turn slowly)
     drive_motor(right_motor, motor_sweep_speed, false);
   
-    IR_amplitude = measure_IR_amplitude(107);                    // Take IR sensor input
+    IR_amplitude = measure_IR_amplitude(IR_AMP_PIN,107);         // Take IR sensor input
   
     if (IR_amplitude > max_IR_amplitude) {                       // If new max found...
       max_IR_amplitude = IR_amplitude;                           // ...set max to current value
@@ -214,7 +217,7 @@ void point_towards_nearest_dummy(int sweep_time = 6000, float threshold = 0.7, i
 
     if (not dummy_located) {                                     // If haven't found dummy yet
 
-      IR_amplitude = measure_IR_amplitude(107);                  // Read IR amplitude
+      IR_amplitude = measure_IR_amplitude(IR_AMP_PIN,107);       // Read IR amplitude
 
       if (IR_amplitude < max_IR_amplitude*threshold) {           // If IR value hasn't reached cutoff (threshold*max_IR_amplitude), then continue turning, searching
 
@@ -272,7 +275,7 @@ bool home_dummy() {                                              // Algorithm to
   return false;
 }
 
-bool turn(int angle, bool clockwise = true) {                    // Turns a set angle. Should be accurate since uses carefully calibrated motor speed + turn time. Returns true when done
+bool turn(int angle, bool clockwise) {                           // Turns a set angle. Should be accurate since uses carefully calibrated motor speed + turn time. Returns true when done
 
   if (turn_timer == 0) {                                         // If haven't started turning yet
 
@@ -291,23 +294,22 @@ bool turn(int angle, bool clockwise = true) {                    // Turns a set 
   }
 }
 bool turn_onto_line(){
-  read_line_sensors();
-  if (line_1){                                                    //if left line sensor on turn to left just as shorter
+  if (line1){                                                    //if left line sensor on turn to left just as shorter
     drive_motor(right_motor, 255, false);
     drive_motor(left_motor, 255, true);
     return false;
   }
-  else if (line_3){                                               //if right line sensor on turn right
+  else if (line3){                                               //if right line sensor on turn right
     drive_motor(right_motor, 255, true);
     drive_motor(left_motor, 255, false);
     return false;
   }
-  else if (not line_2){                                           // drive forward which gets you back onto line           
+  else if (not line_2){                                           // drive forward back onto line           
     drive_motor(right_motor, 255, false);
     drive_motor(left_motor, 255, false);
     return false;
   }
-  else if ((line_2) and (not line_1) and (not line_3)){            // if this doesn't work, remember which you hit first and wait till we hit the other one
+  else if ((line_2) and (not line_1) and (not line_3){
     drive_motor(right_motor, 0, false);
     drive_motor(left_motor, 0, false);
     return true;
@@ -317,31 +319,7 @@ bool turn_onto_line(){
   }
 }
 int identify_dummy(){                                            // Reads IR input signal and determines which dummy is in front of it 
-                                                                 // Function to return modulation type as enumerated integer (1=mod, 2=mix, 3=unmod, 4=bad)
-  
-  // Number of times to sample the IR reading (1 sample ~=~ 3.42us)
-  int samples = 3509;                                            // Changing this will change the boundary conditions! (averages get skewed!)
-  float lower_mod = 0.85;                                        // Lower boundary of average value for modulated signal
-  float lower_mix = 0.91;                                        // Lower boundary of average value for mixmodulated signal (and upper for modulated)
-  float lower_unm = 0.96;                                        // Lower boundary of average value for unmodulated signal (and upper for mixmodulated)
-  
-  int sum = 0;
-  for (int i = 0; i < samples; i++) {
-    sum = sum + (int) digitalRead(MOD_PIN);                      // Continually sample value of wave, and add up total
-  }
-  float total = (float(sum)/float(samples));                     // Calculate mean value of wave
-  
-  //Serial.print(total);
-  //Serial.print(" ");
-  if (total >= lower_mod and total < lower_mix) {
-    return 1;                                                    // Modulated
-  } else if (total >= lower_mix and total < lower_unm) {
-    return 2;                                                    // Mixmodulated
-  } else if (total >= lower_unm) {
-    return 3;                                                    // Unmodulated
-  } else {
-    return 0;                                                    // Something weird???
-  }
+  // write this when electrical sorted ir sensor
 }
 
 bool pick_up_dummy(){                                            // Drive servos to pick up dummy. Return true when finished
@@ -374,8 +352,7 @@ void setup() {                                                   // Function tha
   pinMode(TRIG_PIN, OUTPUT);                                     // Use TRIG pin as output for ultrasonic sensor (this pin gives an ultrasonic pulse)
   pinMode(ECHO_PIN, INPUT);                                      // Use ECHO pin as input for ultrasonic sensor (this pin reads the echoed ultrasonic pulse from the TRIG pin)
   pinMode(IR_AMP_PIN,INPUT);                                     // Pin for measuring the amplitude of the IR sensor for use in locating dummies
-  pinMode(MOD_PIN, INPUT);                                       // Pin for measuring modulated signal to detect dummies
-  
+
   robot_state = 0;                                               // Reset robot state to default
 
   left_motor->setSpeed(0);                                       // Initialise left motor
@@ -385,16 +362,13 @@ void setup() {                                                   // Function tha
   right_motor->setSpeed(0);                                      // Initialise right motor
   right_motor->run(FORWARD);
   right_motor->run(RELEASE); 
-
-  claw_servo.attach(SERVO_1_PIN);
-  lift_servo.attach(SERVO_2_PIN);
 }
 
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
 void loop() {                                                    // Function that runs repeatedly whilst the robot is on
   if (robot_test_state == -1) {                                  // Test -1: Display all sensor/input values
     Serial.print("IR Amp: ");
-    Serial.print(measure_IR_amplitude(107));                     // IR Amplitude
+    Serial.print(measure_IR_amplitude(IR_AMP_PIN,107));          // IR Amplitude
     Serial.print(" / 1023, US Dist: ");
     Serial.print(take_ultrasonic_reading());                     // Ultrasonic distance
     read_line_sensors();                                         // Update line sensors
@@ -457,15 +431,6 @@ void loop() {                                                    // Function tha
       }
     }
   }
-  else if (robot_test_state == 25) {
-
-    if (tick_counter*tick_length > 3000 and tick_counter*tick_length < 6000) {
-      //claw_servo.write(45 - cos(tick_counter*tick_length * 3.1415 / 3000));
-      //claw_servo.write(20);
-    }
-    
-    
-  }
   else if (robot_test_state == 9) {
     if (tick_counter*tick_length > 3000) {
       if (tick_counter*tick_length % 6000 > 3000) { 
@@ -478,7 +443,7 @@ void loop() {                                                    // Function tha
   }
   else if (robot_test_state == 12) {                             // Test 12: Follow line
     if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
-      follow_line();                                         // Just run the follow_line() function (forwards)
+      follow_line(true);                                         // Just run the follow_line() function (forwards)
     }
   }
   else if (robot_test_state == 20) {
@@ -493,14 +458,14 @@ void loop() {                                                    // Function tha
         if (scared == 0) {
           scared = 1;
         }
-        follow_line();
+        follow_line(true);
       }
     }
   }
       
   else if (tick_length * tick_counter > 3000) {                  // main program
     if (robot_state == 0){                                       // starting sequence -> pick up first dummy
-      if ((take_ultrasonic_reading() > 5) and (measure_IR_amplitude() < 1023)){                  // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+      if ((take_ultrasonic_reading() > 5) and (take_IR_sensor_readings() < 1023)){                  // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
         follow_line();
       }
       else {
@@ -510,7 +475,7 @@ void loop() {                                                    // Function tha
           delay_5s_start_time = tick_counter*tick_length;
         }
         if (tick_length * tick_counter > delay_5s_start_time + 5000){
-          what_dummy_am_I = identify_dummy();
+          which_dummy_am_I = identify_dummy();
           picked_up_yet = pick_up_dummy();
         }
         if (picked_up_yet){
@@ -523,7 +488,7 @@ void loop() {                                                    // Function tha
 
     if (robot_state == 1){                                       //picked up first dummy and drop it off
       if (not follow_line()){
-        horizontal_line = follow_line();
+        horizontal_line = follow_line()
       }
       if (horizontal_line){
         finished_dropping = drop_off_dummy();
@@ -558,9 +523,11 @@ void loop() {                                                    // Function tha
       }
 
     if ((robot_test_state == 6) and (robot_state == 3.1))        //succesfully turned 180 to face back to start (still competition breakaway)
-      if (follow_line()){                                        //drive back to start then count when over first cross roads
+      if (not follow_line(){                                     //drive back to start
+      }
+      else if (follow_line()){                                   //count when over first cross roads
         hit_cross_roads += 1;
-      }                                                          // will return true more than once ! only add it when line sensors gone off again!!
+      }
       else if (hit_cross_roads == 2){
         if (drive_1s_timer = 0){
           drive_1s_timer = tick_counter * tick_length; 
@@ -586,13 +553,13 @@ void loop() {                                                    // Function tha
         drive_motor(left_motor,255,true);
         drive_motor(right_motor,255,true);
       }
-      else if(not turn_onto_line()){ 
-        turn_onto_line();
+      else if(not turn_onto_line(){ 
+        turn_onto_line()
         // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
       }
       else if(turn_onto_line()){
         robot_state = 4;
-        picked_up_yet = false;
+        picked_up_yet = false
       }
     } 
 
