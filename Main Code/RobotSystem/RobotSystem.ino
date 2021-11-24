@@ -334,27 +334,27 @@ int identify_dummy(){                                            // Reads IR inp
   //Serial.print(total);
   //Serial.print(" ");
   if (total >= lower_mod and total < lower_mix) {
-    if ((tick_counter * tick_length) % 2000) < 1000{
+    if (((tick_counter * tick_length) % 2000) < 1000){
       digitalWrite(LED2_PIN,LOW);                                   // red 2, green 3 both flashing 0.5Hz
       digitalWrite(LED3_PIN,LOW);
     }
     else{
-      digitalrite(LED2_PIN,HIGH);
+      digitalWrite(LED2_PIN,HIGH);
       digitalWrite(LED3_PIN,HIGH);
     }
     return 1;                                                    // Modulated, white box
   } 
   else if (total >= lower_mix and total < lower_unm) {
-    if ((tick_counter * tick_length) % 4000) < 2000{
+    if (((tick_counter * tick_length) % 4000) < 2000){
       digitalWrite(LED2_PIN,LOW);                                // red flashing 0.25 Hz
     }
     else{
-      digitalrite(LED2_PIN,HIGH);
+      digitalWrite(LED2_PIN,HIGH);
     }
     return 2;                                                    // Mixmodulated, blue box (left hand turn)
   }
   else if (total >= lower_unm) {
-    if ((tick_counter * tick_length) % 200) < 100{              // gren flashing 5Hz
+    if (((tick_counter * tick_length) % 200) < 100){              // gren flashing 5Hz
       digitalWrite(LED3_PIN,LOW);
     }
     else{
@@ -588,7 +588,7 @@ void loop() {                                                    // Function tha
         }
       }
 
-      if (what_dummy_am_I == 1 and robot_state == 1){            // modulated dummy going to white box
+      if (what_dummy_am_I == 1 and robot_state == 1){            // modulated dummy going to white box, at the end of this if statement the robot is on line facing dummy in white box
         if (robot_sub_state = 0){
           if (follow_line()){                                      //test state 1 is having just picked up dummy
             finished_dropping = drop_off_dummy();
@@ -609,29 +609,52 @@ void loop() {                                                    // Function tha
           }
           else{
             robot_state = 2;
+            robot_sub_state = 0;
             reverse_3s = 0;
           }
         }
-      
-    
-        if (robot_state == 2){                                   // back out of drop off
-          if (not home_dummy()){                                     //home dummy?
+      }
+
+      if (robot_state == 2){                                   // back out of drop off
+        if (robot_sub_state =0){
+          if (not dummy_located){
+            point_towards_nearest_dummy();
+        }
+          if (home_dummy()){                                     //home dummy?
+            robot_sub_state = 1;
+            dummy_located = false
           }
-          else{
+        }
+
+        else{
+          picked_up_yet = pick_up_dummy();
+          drive_motor(left_motor,0,false);                                    
+          drive_motor(right_motor,0,false);
+          if (delay_5s_start_time == 0){
+            delay_5s_start_time = tick_counter*tick_length;
+          }
+          if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
+            what_dummy_am_I = identify_dummy();
+          }
+          if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
             picked_up_yet = pick_up_dummy();
           }
-          if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
-            drive_motor(left_motor,255,true);
-            drive_motor(right_motor,255,true);
-          }
-          else if(not turn_onto_line()){ 
-            turn_onto_line();
-            // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
-          }
-          else if(turn_onto_line()){
-            robot_state = 4;
+          if (picked_up_yet){
+            delay_5s_start_time = -1;
+            robot_state = 1;
             picked_up_yet = false;
           }
+        }
+        if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
+          drive_motor(left_motor,255,true);
+          drive_motor(right_motor,255,true);
+        }
+        else if(not turn_onto_line()){ 
+          turn_onto_line();                                      // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
+        }
+        else if(turn_onto_line()){
+          robot_state = 4;
+          picked_up_yet = false;
         }
       }
       if (what_dummy_am_I == 2 or what_dummy_am_I == 3){
