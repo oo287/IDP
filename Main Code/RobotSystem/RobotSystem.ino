@@ -622,7 +622,7 @@ void loop() {                                                    // Function tha
         }
           if (home_dummy()){                                     //home dummy?
             robot_sub_state = 1;
-            dummy_located = false
+            dummy_located = false;
           }
         }
 
