@@ -421,7 +421,7 @@ void loop() {                                                    // Function tha
   }
   
   if (program_started) {
-    if (robot_test_state != 25) {
+    if (robot_test_state != 9) {
       claw_servo.write(20);
       lift_servo.write(150);
     }
@@ -504,42 +504,44 @@ void loop() {                                                    // Function tha
         claw_servo.write(70);
         lift_servo.write(70);
       }
-      else if (tick_counter*tick_length < 6000) {
+      else if (tick_counter*tick_length < 17000) {
         claw_servo.write(70);
         lift_servo.write(70);
-        //drive_motor(right_motor,255,false);
-        //drive_motor(left_motor,255,false);
+        drive_motor(right_motor,255,false);
+        drive_motor(left_motor,255,false);
       }
-      else if (tick_counter*tick_length < 7000) {
-        //drive_motor(right_motor,0,false);
-        //drive_motor(left_motor,0,false);
+      else if (tick_counter*tick_length < 18000) {
+        claw_servo.write(70);
+        lift_servo.write(70);
+        drive_motor(right_motor,0,false);
+        drive_motor(left_motor,0,false);
+      }
+      else if (tick_counter*tick_length < 18500) {
         claw_servo.write(70);
         lift_servo.write(125);
       }
-      else if (tick_counter*tick_length < 8000) {
+      else if (tick_counter*tick_length < 19000) {
         claw_servo.write(20);
         lift_servo.write(130);
       }
-      else if (tick_counter*tick_length < 9000) {
+      else if (tick_counter*tick_length < 21000) {
         claw_servo.write(20);
         lift_servo.write(150);
       }
-      else if (tick_counter*tick_length < 10000) {
+      else if (tick_counter*tick_length < 22000) {
         claw_servo.write(20);
         lift_servo.write(150);
-        //drive_motor(right_motor,255,true);
-        //drive_motor(left_motor,255,true);
+        drive_motor(right_motor,255,true);
+        drive_motor(left_motor,255,true);
       }
-      else if (tick_counter*tick_length < 11000) {
+      else if (tick_counter*tick_length < 23000) {
         claw_servo.write(20);
         lift_servo.write(150);
-        //drive_motor(right_motor,0,true);
-        //drive_motor(left_motor,0,true);
+        drive_motor(right_motor,0,true);
+        drive_motor(left_motor,0,true);
       }
-      
-      
-      
     }
+    
     else if (robot_test_state == 12) {                             // Test 12: Follow line
       if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
         follow_line();                                         // Just run the follow_line() function (forwards)
