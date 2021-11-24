@@ -446,6 +446,7 @@ void loop() {                                                    // Function tha
   }
   
   if (program_started) {
+      Serial.print("button worked");
     if (robot_test_state != 9) {
       claw_servo.write(20);
       lift_servo.write(150);
@@ -620,15 +621,9 @@ void loop() {                                                    // Function tha
         }
       }
     }
-<<<<<<< HEAD
     else if (robot_test_state == 15) {                             // Test 15: Identify dummy. Whilst in front of dummy, blink the correct LEDs to show which dummy this one is       
       if (tick_counter*tick_length > 3000) {                       // Wait 3 seconds
         identify_dummy();                                           // Identify dummy testing
-=======
-    else if (robot_test_state == 15) {                           // Test 15: Identify dummy. Whilst in front of dummy, blink the correct LEDs to show which dummy this one is       
-      if (tick_counter*tick_length > 3000) {                     // Wait 3 seconds
-        identify_dummy()                                         // Identify dummy testing
->>>>>>> 64577ccbe4e8512bd233b27be39e1a83cde675ee
       }
     }
     else if (robot_test_state == 20) {
@@ -730,7 +725,7 @@ void loop() {                                                    // Function tha
         // delivers first dummy that's on the line to the RED box  modulatee ir signal
         if (robot_sub_state == 0){
           if (turn(180)){
-            robot_sub_state = 1
+            robot_sub_state = 1;
           }
         }
         if (robot_sub_state = 1){
@@ -747,11 +742,12 @@ void loop() {                                                    // Function tha
                 follow_line();
               }
               else{
-                robot_sub_state = 3
+                robot_sub_state = 3;
               }
+           }
         }
-        if (robot_sub_state  3){
-            if(turn(90, true){                                   //turn 90 clockwis
+        if (robot_sub_state == 3){
+            if(turn(90, true)){                                   //turn 90 clockwis
               finished_dropping = drop_off_dummy();
               if (finished_dropping){                            //drops off dummy
                 robot_sub_state = 3;
@@ -817,8 +813,8 @@ void loop() {                                                    // Function tha
           }
         }
         if (robot_sub_state == 1){
-        // if its the white box dummy, check which way we're facing and then re-use same code as it you've just picket it up when it was already on the line
-          if (take_ultrasound_reading() < 100){
+        // if its the white box dummy, check which way we're facing and then re-use same code as it you've just picked it up when it was already on the line
+          if (take_ultrasonic_reading() < 100){
             robot_state = 1;
             robot_sub_state =0;
           }
