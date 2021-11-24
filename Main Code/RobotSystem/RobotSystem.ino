@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 9;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 21;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
 unsigned const int tick_length = 20;                             // The length of one tick in milliseconds. Clock Frequency = 1/tick_length. Since IR sensor takes ~12ms, 20ms currently used
@@ -333,27 +333,27 @@ int identify_dummy(){                                            // Reads IR inp
   //Serial.print(total);
   //Serial.print(" ");
   if (total >= lower_mod and total < lower_mix) {
-    if ((tick_counter * tick_length) % 2000) < 1000{
+    if ((tick_counter * tick_length) % 2000 < 1000) {
       digitalWrite(LED2_PIN,LOW);                                   // red 2, green 3 both flashing 0.5Hz
       digitalWrite(LED3_PIN,LOW);
     }
     else{
-      digitalrite(LED2_PIN,HIGH);
+      digitalWrite(LED2_PIN,HIGH);
       digitalWrite(LED3_PIN,HIGH);
     }
     return 1;                                                    // Modulated
   } 
   else if (total >= lower_mix and total < lower_unm) {
-    if ((tick_counter * tick_length) % 4000) < 2000{
+    if ((tick_counter * tick_length) % 4000 < 2000) {
       digitalWrite(LED2_PIN,LOW);                                // red flashing 0.25 Hz
     }
     else{
-      digitalrite(LED2_PIN,HIGH);
+      digitalWrite(LED2_PIN,HIGH);
     }
     return 2;                                                    // Mixmodulated
   }
   else if (total >= lower_unm) {
-    if ((tick_counter * tick_length) % 200) < 100{              // gren flashing 5Hz
+    if ((tick_counter * tick_length) % 200 < 100) {              // gren flashing 5Hz
       digitalWrite(LED3_PIN,LOW);
     }
     else{
@@ -389,6 +389,8 @@ void setup() {                                                   // Function tha
   Serial.print("Motorshield successfully initialised.");         // Infamous message that will haunt your nightmares (displays repeatedly if Arduino crashing (check drive_motor() uses!))
 
   pinMode(LED1_PIN, OUTPUT);                                     // Declare the Pin used for Orange LED (LED1) as OUTPUT
+  pinMode(LED2_PIN, OUTPUT);
+  pinMode(LED3_PIN, OUTPUT);
   pinMode(LS1_PIN, INPUT);                                       // Declare the line sensor pins as inputs
   pinMode(LS2_PIN, INPUT);
   pinMode(LS3_PIN, INPUT);
@@ -560,116 +562,121 @@ void loop() {                                                    // Function tha
         }
       }
     }
-        
-    else if (robot_test_state == 0) {                  // main program
-      if (robot_state == 0) {
-        if ((take_ultrasonic_reading() > 5) and (measure_IR_amplitude() < 1023)){                  // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
-          follow_line();
-        }
-        else {
-          drive_motor(left_motor,0,false);                                    
-          drive_motor(right_motor,0,false);
-          if (delay_5s_start_time == 0){
-            delay_5s_start_time = tick_counter*tick_length;
-          }
-          if (tick_length * tick_counter > delay_5s_start_time + 5000){
-            identify_dummy();
-            picked_up_yet = pick_up_dummy();
-          }
-          if (picked_up_yet){
-            delay_5s_start_time = -1;
-            robot_state = 1;
-            picked_up_yet = false;
-          }
-        }
-      }
-
-      if (robot_state == 1){                                       //picked up first dummy and drop it off
-        if (follow_line()){
-          finished_dropping = drop_off_dummy();
-        }
-        if (finished_dropping){
-          robot_state == 2;
-          finished_dropping = false;
-          horizontal_line = false;
-        }
-      }
-  
-      if (robot_state == 2){                                       // back out of drop off
-         if (reverse_3s == 0){
-           reverse_3s = tick_counter * tick_length;
-         }                                                         //reverse for 2s
-         else if (tick_counter * tick_length < reverse_3s + 2000){
-           drive_motor(left_motor,255,true);
-           drive_motor(right_motor,255,true);
-         }
-         else{
-           robot_state = 3;
-           reverse_3s = 0;
-         }
-       }
-  
-      if ((robot_test_state == 6) and (robot_state == 3)){         //first competetion breakaway point RESUME FROM HERE
-        if ((not turn(180)) and (not turned_yet)){
-        }
-        else{
-          turned_yet = true;
-          robot_state = 3.1;
-        }
-  
-      if ((robot_test_state == 6) and (robot_state == 3.1))        //succesfully turned 180 to face back to start (still competition breakaway)
-        if (follow_line()){                                        //drive back to start then count when over first cross roads
-          hit_cross_roads += 1;
-        }                                                          // will return true more than once ! only add it when line sensors gone off again!!
-        else if (hit_cross_roads == 2){
-          if (drive_1s_timer = 0){
-            drive_1s_timer = tick_counter * tick_length; 
-          }                                                        //drive 1s forward into box from top of box
-          else if (tick_length * tick_counter < drive_1s_timer + 1000){
-            drive_motor(left_motor, 255, true);
-            drive_motor(right_motor, 255, true);
-          }
-          else{                                                    //stop
-            drive_motor(left_motor, 0, true);
-            drive_motor(right_motor, 0, true);
-          }
-        }
-      }
-  
-      if (robot_state == 3){                                       //find 2nd dummy
-        if (not home_dummy()){                                     //home dummy?
-        }
-        else{
-          picked_up_yet = pick_up_dummy();
-        }
-        if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
-          drive_motor(left_motor,255,true);
-          drive_motor(right_motor,255,true);
-        }
-        else if(not turn_onto_line()){ 
-          turn_onto_line();
-          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
-        }
-        else if(turn_onto_line()){
-          robot_state = 4;
-          picked_up_yet = false;
-        }
-      } 
-  
-      if (robot_state == 4){
-        if (take_ultrasonic_reading() < 100){
-          while (not turn(180)){                                   //remove this or face ollie's wrath
-          }
-        }
-        else if (not follow_line()){
-        }
-        else{
-          turn(90);
-          drop_off_dummy();
-        }
-      }
+    else if (robot_test_state == 21) {
+      digitalWrite(LED1_PIN,HIGH);
+      digitalWrite(LED2_PIN,HIGH);
+      digitalWrite(LED3_PIN,HIGH);
     }
-  
+        
+//    else if (robot_test_state == 0) {                  // main program
+//      if (robot_state == 0) {
+//        if ((take_ultrasonic_reading() > 5) and (measure_IR_amplitude() < 1023)){                  // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+//          follow_line();
+//        }
+//        else {
+//          drive_motor(left_motor,0,false);                                    
+//          drive_motor(right_motor,0,false);
+//          if (delay_5s_start_time == 0){
+//            delay_5s_start_time = tick_counter*tick_length;
+//          }
+//          if (tick_length * tick_counter > delay_5s_start_time + 5000){
+//            identify_dummy();
+//            picked_up_yet = pick_up_dummy();
+//          }
+//          if (picked_up_yet){
+//            delay_5s_start_time = -1;
+//            robot_state = 1;
+//            picked_up_yet = false;
+//          }
+//        }
+//      }
+//
+//      if (robot_state == 1){                                       //picked up first dummy and drop it off
+//        if (follow_line()){
+//          finished_dropping = drop_off_dummy();
+//        }
+//        if (finished_dropping){
+//          robot_state == 2;
+//          finished_dropping = false;
+//          horizontal_line = false;
+//        }
+//      }
+//  
+//      if (robot_state == 2){                                       // back out of drop off
+//         if (reverse_3s == 0){
+//           reverse_3s = tick_counter * tick_length;
+//         }                                                         //reverse for 2s
+//         else if (tick_counter * tick_length < reverse_3s + 2000){
+//           drive_motor(left_motor,255,true);
+//           drive_motor(right_motor,255,true);
+//         }
+//         else{
+//           robot_state = 3;
+//           reverse_3s = 0;
+//         }
+//       }
+//  
+//      if ((robot_test_state == 6) and (robot_state == 3)){         //first competetion breakaway point RESUME FROM HERE
+//        if ((not turn(180)) and (not turned_yet)){
+//        }
+//        else{
+//          turned_yet = true;
+//          robot_state = 3.1;
+//        }
+//  
+//      if ((robot_test_state == 6) and (robot_state == 3.1))        //succesfully turned 180 to face back to start (still competition breakaway)
+//        if (follow_line()){                                        //drive back to start then count when over first cross roads
+//          hit_cross_roads += 1;
+//        }                                                          // will return true more than once ! only add it when line sensors gone off again!!
+//        else if (hit_cross_roads == 2){
+//          if (drive_1s_timer = 0){
+//            drive_1s_timer = tick_counter * tick_length; 
+//          }                                                        //drive 1s forward into box from top of box
+//          else if (tick_length * tick_counter < drive_1s_timer + 1000){
+//            drive_motor(left_motor, 255, true);
+//            drive_motor(right_motor, 255, true);
+//          }
+//          else{                                                    //stop
+//            drive_motor(left_motor, 0, true);
+//            drive_motor(right_motor, 0, true);
+//          }
+//        }
+//      }
+//  
+//      if (robot_state == 3){                                       //find 2nd dummy
+//        if (not home_dummy()){                                     //home dummy?
+//        }
+//        else{
+//          picked_up_yet = pick_up_dummy();
+//        }
+//        if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
+//          drive_motor(left_motor,255,true);
+//          drive_motor(right_motor,255,true);
+//        }
+//        else if(not turn_onto_line()){ 
+//          turn_onto_line();
+//          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
+//        }
+//        else if(turn_onto_line()){
+//          robot_state = 4;
+//          picked_up_yet = false;
+//        }
+//      } 
+//  
+//      if (robot_state == 4){
+//        if (take_ultrasonic_reading() < 100){
+//          while (not turn(180)){                                   //remove this or face ollie's wrath
+//          }
+//        }
+//        else if (not follow_line()){
+//        }
+//        else{
+//          turn(90);
+//          drop_off_dummy();
+//        }
+//      }
+//    }
+
     tick_counter ++;                                               // Increment tick counter
     delay(tick_length - (millis() % tick_length));                 // Delay the remaining milliseconds of the tick to keep tick rate constant (as long as computer fast enough)
   }
