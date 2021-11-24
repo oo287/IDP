@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 9;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = -1;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state =0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -622,7 +622,7 @@ void loop() {                                                    // Function tha
     }
     else if (robot_test_state == 15) {                             // Test 15: Identify dummy. Whilst in front of dummy, blink the correct LEDs to show which dummy this one is       
       if (tick_counter*tick_length > 3000) {                       // Wait 3 seconds
-        identify_dummy()                                           // Identify dummy testing
+        identify_dummy();                                           // Identify dummy testing
       }
     }
     else if (robot_test_state == 20) {
