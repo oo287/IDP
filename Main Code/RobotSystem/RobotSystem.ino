@@ -643,12 +643,12 @@ void loop() {                                                    // Function tha
         }
       }
 
-      if (robot_state == 2){                                   // finds the dummy from on line position in advanced area
+      if (robot_state == 2){                                     // finds the dummy. Starts on the line (advanced area)
         if (robot_sub_state == 0){
           if (not dummy_located){
             point_towards_nearest_dummy();
           }
-          if (home_dummy()){                                     //home dummy?
+          if (home_dummy()){                                     // gets you from the line to facing the dummy which is off the line
             robot_sub_state = 1;
             dummy_located = false;
           }
@@ -663,9 +663,10 @@ void loop() {                                                    // Function tha
           if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
             picked_up_yet = pick_up_dummy();
           }
-          if (picked_up_yet){
+          if (picked_up_yet){                                    // identifies the dummy waits 5s and picks it up
             delay_5s_start_time = 0;
             robot_state = 3;
+            robot_sub_state = 0;
             picked_up_yet = false;
           }
         }
@@ -696,18 +697,41 @@ void loop() {                                                    // Function tha
         // delivers first dummy that's on the line to the blue box mixed modulated ir signal
       }
 
-      if ((what_dummy_am_I == 1 and robot_state == 2)){
+      if (robot_state == 3){                                       //found second dummy, need to return it to its home
+        if (robot_sub_state == 0){
+          if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
+            drive_motor(left_motor,255,true);
+            drive_motor(right_motor,255,true);
+          }
+          else if(not turn_onto_line()){ 
+            turn_onto_line();
+            // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
+          }
+          else if(turn_onto_line()){
+            robot_sub_state = 1;
+            picked_up_yet = false;
+          }
+        }
+        if (robot_sub_state == 1){
+          if (turn(180)){
+            robot_sub_state =0;
+            robot_state = 4;
+          }
+        }
+      }
+
+      if ((what_dummy_am_I == 1 and robot_state == 4)){
         // delivers first dummy that's on the line to the blue box mixed modulated ir signal
       }
 
-      if ((what_dummy_am_I == 2 and robot_state == 3)){
+      if ((what_dummy_am_I == 2 and robot_state == 4)){
         // delivers first dummy that's on the line to the blue box mixed modulated ir signal
       }
 
-      if ((what_dummy_am_I == 3 and robot_state == 3)){
+      if ((what_dummy_am_I == 3 and robot_state == 4)){
         // delivers first dummy that's on the line to the blue box mixed modulated ir signal
       }
-      // if ((robot_test_state == 6) and (robot_state == 3)){         //first competetion breakaway point RESUME FROM HERE
+      // if ((robot_test_state == 6) and (robot_state == 3)){         //first competetion breakaway point RESUME FROM HERE not useable but some may be copy and pastable
       //   if ((not turn(180)) and (not turned_yet)){
       //   }
       //   else{
@@ -734,40 +758,9 @@ void loop() {                                                    // Function tha
       //   }
       // }
   
-      if (robot_state == 3){                                       //find 2nd dummy
-        if (not home_dummy()){                                     //home dummy?
-        }
-        else{
-          picked_up_yet = pick_up_dummy();
-        }
-        if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
-          drive_motor(left_motor,255,true);
-          drive_motor(right_motor,255,true);
-        }
-        else if(not turn_onto_line()){ 
-          turn_onto_line();
-          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
-        }
-        else if(turn_onto_line()){
-          robot_state = 4;
-          picked_up_yet = false;
-        }
-      } 
-  
-      if (robot_state == 4){
-        if (take_ultrasonic_reading() < 100){
-          while (not turn(180)){                                   //remove this or face ollie's wrath
-          }
-        }
-        else if (not follow_line()){
-        }
-        else{
-          turn(90);
-          drop_off_dummy();
-        }
-      }
+ 
     }
-  
+
     tick_counter ++;                                               // Increment tick counter
     delay(tick_length - (millis() % tick_length));                 // Delay the remaining milliseconds of the tick to keep tick rate constant (as long as computer fast enough)
   }
