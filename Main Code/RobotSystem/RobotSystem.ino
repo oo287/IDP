@@ -63,6 +63,8 @@ unsigned long turn_timer = 0;                                    // Timer used f
 const int full_360_time = 6000;                                  // Time taken for full 360 at set motor speed
 const int motor_360_speed = 100;                                 // Motor speed used for turning a full 360
 
+unsigned long pick_up_dummy_start_time = 0;                      // Time to start picking up dummy
+unsigned long drop_off_dummy_start_time = 0;                     // Time to start dropping off dummy
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();              // Create motorshield object called 'AFMS' with default I2C address. Put I2C address in brackets if different address needed
@@ -368,14 +370,37 @@ int identify_dummy(){                                            // Reads IR inp
 }
 
 bool pick_up_dummy(){                                            // Drive servos to pick up dummy. Return true when finished
-  // when claw built write this and give output of when its return true when done
+  if (pick_up_dummy_start_time == 0) {
+    pick_up_dummy_start_time = tick_counter*tick_length;         // Initialise
+  }
+  else if (tick_counter*tick_length < pick_up_dummy_start_time + 1000) {
+    claw_servo.write(70);
+    lift_servo.write(150);
+  }
+  else if (tick_counter*tick_length < pick_up_dummy_start_time + 2000) {
+    claw_servo.write(70);
+    lift_servo.write(70);
+    pick_up_dummy_start_time = 0;
+    return true;
+  }
+  return false;
 }
 
 bool drop_off_dummy(){                                           // Drive servos to released dummy. Return true when finished
-  // write this when claw built return true when done
-}
-void approach_identify_grab(){
-  //idk if we need this but its here if we do
+  if (drop_off_dummy_start_time == 0) {
+    drop_off_dummy_start_time = tick_counter*tick_length;         // Initialise
+  }
+  else if (tick_counter*tick_length < drop_off_dummy_start_time + 1000) {
+    claw_servo.write(70);
+    lift_servo.write(150);
+  }
+  else if (tick_counter*tick_length < drop_off_dummy_start_time + 2000) {
+    claw_servo.write(70);
+    lift_servo.write(70);
+    drop_off_dummy_start_time = 0;
+    return true;
+  }
+  return false;
 }
 
 
