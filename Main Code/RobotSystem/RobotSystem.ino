@@ -15,7 +15,6 @@ bool program_started = false;                                    // Bool to stor
 // --------- Hardware Constants ---------                        // --------- Hardware Constants ---------
 const int LM_port =  3;                                          // Motor shield port that the left motor uses
 const int RM_port = 4;                                           // Motor shield port that the right motor uses
-
 const int LED1_PIN = 0;                                          // Pin used for Orange LED (LED1)
 const int LED2_PIN = 1;                                          // Pin used for Red LED (LED2)
 const int LED3_PIN = 2;                                          // Pin used for Green LED (LED2)
@@ -29,7 +28,6 @@ const int IR_MOD_PIN = 5;                                        // IR to detect
 const int SERVO_1_PIN = 10;                                      // Claw grab servo
 const int SERVO_2_PIN = 9;                                       // Claw lift servo
 const int BUTTON_PIN = 11;                                       // Pin for button to start the program (not stop if pressed again!)
-
 
 // --------- Sensor Variables ---------                          // --------- Sensor Variables ---------
 bool line_1, line_2, line_3;                                     // Booleans to describe if each line sensor has a line below or not
@@ -292,6 +290,7 @@ bool turn(int angle, bool clockwise = true) {                    // Turns a set 
     return true;                                                 // Done so return true
   }
 }
+
 bool turn_onto_line(){
   read_line_sensors();
   if (line_1){                                                    //if left line sensor on turn to left just as shorter
@@ -318,6 +317,7 @@ bool turn_onto_line(){
     return false;
   }
 }
+
 int identify_dummy(){                                            // Reads IR input signal and determines which dummy is in front of it 
                                                                  // Function to return modulation type as enumerated integer (1=mod, 2=mix, 3=unmod, 4=bad)
   
@@ -652,7 +652,6 @@ void loop() {                                                    // Function tha
           drive_motor(right_motor,0,false);
           if (delay_5s_start_time == 0){
             delay_5s_start_time = tick_counter*tick_length;
-
           }
           if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
             what_dummy_am_I = identify_dummy();
@@ -692,10 +691,60 @@ void loop() {                                                    // Function tha
             robot_state = 2;
             robot_sub_state = 0;
             reverse_3s = 0;
+            finished_dropping = false;
           }
         }
       }
+   
+      if ((what_dummy_am_I == 2 or what_dummy_am_I == 3) and (robot_state == 1)){
+        // delivers first dummy that's on the line to the RED box  modulatee ir signal
+        if (robot_sub_state == 0){
+          if (turn(180)){
+            robot_sub_state = 1
+          }
+        }
+        if (robot_sub_state = 1){
+          if (follow_line()){                                    //drive back to start then count when over first cross roads
+            robot_sub_state = 2;
+          }
+        }
+        if (robot_sub_state = 2){
+            if (what_dummy_am_I == 2){
+              if (drive_1s_timer = 0){
+                drive_1s_timer = tick_counter * tick_length; 
+              }                                                  //drive 1s forward so that when it turns its facing box
+              else if (tick_length * tick_counter < drive_1s_timer + 1000){
+                follow_line();
+              }
+              else{
+                robot_sub_state = 3
+              }
+        }
+        if (robot_sub_state  3){
+            if(turn(90, true){                                   //turn 90 clockwis
+              finished_dropping = drop_off_dummy();
+              if (finished_dropping){                            //drops off dummy
+                robot_sub_state = 3;
+              }
+            }
+        }
 
+
+        // else if (hit_cross_roads == 2){
+        //   if (drive_1s_timer = 0){
+        //     drive_1s_timer = tick_counter * tick_length; 
+        //   }                                                      //drive 1s forward into box from top of box
+        //   else if (tick_length * tick_counter < drive_1s_timer + 1000){
+        //     drive_motor(left_motor, 255, true);
+        //     drive_motor(right_motor, 255, true);
+        //   }
+        //   else{                                                  //stop
+        //     drive_motor(left_motor, 0, true);
+        //     drive_motor(right_motor, 0, true);
+        //   }
+        // }
+      }
+      
       if (robot_state == 2){                                     // finds the dummy. Starts on the line (advanced area)
         if (robot_sub_state == 0){
           if (not dummy_located){
@@ -724,67 +773,35 @@ void loop() {                                                    // Function tha
           }
         }
       }
-      
-      if ((what_dummy_am_I == 2) and (robot_state == 1)){
-        // delivers first dummy that's on the line to the RED box  modulatee ir signal
-        if ((not turn(180)) and (not turned_yet)){
-        }
-        else{
-          turned_yet = true;
-          robot_state = 3.1;
-        }
-        if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
-          drive_motor(left_motor,255,true);
-          drive_motor(right_motor,255,true);
-        }
-        else if(not turn_onto_line()){ 
-          turn_onto_line();                                      // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
-        }
-        else if(turn_onto_line()){
-          robot_state = 4;
-          picked_up_yet = false;
-        }
-      }
 
-      if ((what_dummy_am_I == 3 and robot_state == 1)){
-        // delivers first dummy that's on the line to the blue box mixed modulated ir signal
-      }
-
-      if (robot_state == 3){                                       //found second dummy, need to return it to its home
+      if (robot_state == 3){                                     //found second dummy, need to return it to its home
         if (robot_sub_state == 0){
           if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
             drive_motor(left_motor,255,true);
             drive_motor(right_motor,255,true);
           }
-          else if(not turn_onto_line()){ 
-            turn_onto_line();
-            // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line reverse
-          }
+          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line revers
           else if(turn_onto_line()){
             robot_sub_state = 1;
-            picked_up_yet = false;
+            finished_dropping = false;
           }
         }
         if (robot_sub_state == 1){
-          if (turn(180)){
+                            // if its the white box dummy, check which way we're facing and then re-use same code as it you've just picket it up when it was already on the line
+          if (take_ultrasound_reading() < 100){
+            robot_state = 1;
             robot_sub_state =0;
-            robot_state = 4;
+          }
+          else {
+            if (turn(180)){
+              robot_state = 1;
+              robot_sub_state =0;
+            }
           }
         }
       }
 
-      if ((what_dummy_am_I == 1 and robot_state == 4)){
-        // delivers first dummy that's on the line to the blue box mixed modulated ir signal
-      }
-
-      if ((what_dummy_am_I == 2 and robot_state == 4)){
-        // delivers first dummy that's on the line to the blue box mixed modulated ir signal
-      }
-
-      if ((what_dummy_am_I == 3 and robot_state == 4)){
-        // delivers first dummy that's on the line to the blue box mixed modulated ir signal
-      }
-      // if ((robot_test_state == 6) and (robot_state == 3)){         //first competetion breakaway point RESUME FROM HERE not useable but some may be copy and pastable
+      // if ((robot_test_state == 6) and (robot_state == 3)){    //first competetion breakaway point RESUME FROM HERE not useable but some may be copy and pastable
       //   if ((not turn(180)) and (not turned_yet)){
       //   }
       //   else{
