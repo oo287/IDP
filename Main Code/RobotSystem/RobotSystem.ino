@@ -89,11 +89,11 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
       digitalWrite(LED1_PIN,HIGH);                                 // Write HIGH output to LED Pin 1 (orange LED)
     }
     else if (tick_counter*tick_length % 500 > 249) {             // If in second half of 500ms time period (since 50% duty cycle)
-      digitalWrite(LED1_PIN,LOW);                                   // Write LOW output to LED Pin 1 (orange LED)
+      digitalWrite(LED1_PIN,LOW);                                // Write LOW output to LED Pin 1 (orange LED)
     }
   }
   else {
-    digitalWrite(LED1_PIN,LOW);                                     // Turn orange LED off if not moving (writing spd = 0)
+    digitalWrite(LED1_PIN,LOW);                                  // Turn orange LED off if not moving (writing spd = 0)
   } 
 }
 
@@ -581,14 +581,14 @@ void loop() {                                                    // Function tha
             picked_up_yet = pick_up_dummy();
           }
           if (picked_up_yet){
-            delay_5s_start_time = -1;
+            delay_5s_start_time = 0;
             robot_state = 1;
             picked_up_yet = false;
           }
         }
       }
 
-      if (what_dummy_am_I == 1 and robot_state == 1){            // modulated dummy going to white box, at the end of this if statement the robot is on line facing dummy in white box
+      if (what_dummy_am_I == 1 and robot_state == 1){           // modulated dummy going to white box, at the end of this if statement the robot is on line facing dummy in white box
         if (robot_sub_state = 0){
           if (follow_line()){                                      //test state 1 is having just picked up dummy
             finished_dropping = drop_off_dummy();
@@ -616,20 +616,16 @@ void loop() {                                                    // Function tha
       }
 
       if (robot_state == 2){                                   // back out of drop off
-        if (robot_sub_state =0){
+        if (robot_sub_state == 0){
           if (not dummy_located){
             point_towards_nearest_dummy();
-        }
+          }
           if (home_dummy()){                                     //home dummy?
             robot_sub_state = 1;
             dummy_located = false;
           }
         }
-
-        else{
-          picked_up_yet = pick_up_dummy();
-          drive_motor(left_motor,0,false);                                    
-          drive_motor(right_motor,0,false);
+        if(robot_sub_state == 1){
           if (delay_5s_start_time == 0){
             delay_5s_start_time = tick_counter*tick_length;
           }
@@ -640,10 +636,19 @@ void loop() {                                                    // Function tha
             picked_up_yet = pick_up_dummy();
           }
           if (picked_up_yet){
-            delay_5s_start_time = -1;
+            delay_5s_start_time = 0;
             robot_state = 1;
             picked_up_yet = false;
           }
+        }
+      }
+      
+      if ((what_dummy_am_I == 2) and (robot_state == 1)){
+        if ((not turn(180)) and (not turned_yet)){
+        }
+        else{
+          turned_yet = true;
+          robot_state = 3.1;
         }
         if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
           drive_motor(left_motor,255,true);
@@ -657,14 +662,11 @@ void loop() {                                                    // Function tha
           picked_up_yet = false;
         }
       }
-      if (what_dummy_am_I == 2 or what_dummy_am_I == 3){
-        if ((not turn(180)) and (not turned_yet)){
-        }
-        else{
-          turned_yet = true;
-          robot_state = 3.1;
-        }
+
+      if ((what_dummy_am_I == 3 and robot_state == 1)){
+        // 
       }
+
       // if ((robot_test_state == 6) and (robot_state == 3)){         //first competetion breakaway point RESUME FROM HERE
       //   if ((not turn(180)) and (not turned_yet)){
       //   }
