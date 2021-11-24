@@ -5,6 +5,6 @@ Tests that the Robot has been programmed to run (loosely correspond to milestone
 2+3) Move forwards ~1m and flash the orange LED. Can be used for moving over ramp test too
 4) Turn 360 clockwise, anticlockwise, reverse ~1m
 5) Turn towards nearest dummy and drive straight into it
-6) Competition algorithm 
+
 12) Follow line test. Just runs follow_line(false), meaning follow line forwards (reversed = false)
 20) Demo of reversible follow_line(). Uses either IR or US to detect dummy and change direction to 'run away'
