@@ -10,13 +10,15 @@
 #include <Servo.h>
 
 Servo myservo;  // create servo object to control a servo
+Servo myservo2;
 // twelve servo objects can be created on most boards
 
-int angle = 20;
+int angle = 140;
 
 
 void setup() {
-  myservo.attach(10);  // attaches the servo on pin 9 to the servo object
+  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  myservo2.attach(8);
   Serial.begin(9600);
 }
 
@@ -24,7 +26,8 @@ void loop() {
   if (Serial.available()) {
     angle = Serial.parseInt();
   }
-  myservo.write(angle);              // tell servo to go to position in variable 'pos'
+  myservo.write(60);              // tell servo to go to position in variable 'pos'
+  myservo2.write(angle);
   delay(15);                       // waits 15ms for the servo to reach the position
 
 }
