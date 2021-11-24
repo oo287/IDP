@@ -85,14 +85,14 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
 
   if (spd != 0) {                                                // If motor running at non-zero speed
     if (tick_counter*tick_length % 500 < 250) {                  // Use tick_counter*tick_length to set 500ms frequency for LED flashing
-      analogWrite(LED1_PIN,255);                                 // Write HIGH output to LED Pin 1 (orange LED)
+      digitalWrite(LED1_PIN,HIGH);                                 // Write HIGH output to LED Pin 1 (orange LED)
     }
     else if (tick_counter*tick_length % 500 > 249) {             // If in second half of 500ms time period (since 50% duty cycle)
-      analogWrite(LED1_PIN,0);                                   // Write LOW output to LED Pin 1 (orange LED)
+      digitalWrite(LED1_PIN,LOW);                                   // Write LOW output to LED Pin 1 (orange LED)
     }
   }
   else {
-    analogWrite(LED1_PIN,0);                                     // Turn orange LED off if not moving (writing spd = 0)
+    digitalWrite(LED1_PIN,LOW);                                     // Turn orange LED off if not moving (writing spd = 0)
   } 
 }
 
@@ -333,12 +333,35 @@ int identify_dummy(){                                            // Reads IR inp
   //Serial.print(total);
   //Serial.print(" ");
   if (total >= lower_mod and total < lower_mix) {
+    if ((tick_counter * tick_length) % 2000) < 1000{
+      digitalWrite(LED2_PIN,LOW);                                   // red 2, green 3 both flashing 0.5Hz
+      digitalWrite(LED3_PIN,LOW);
+    }
+    else{
+      digitalrite(LED2_PIN,HIGH);
+      digitalWrite(LED3_PIN,HIGH);
+    }
     return 1;                                                    // Modulated
-  } else if (total >= lower_mix and total < lower_unm) {
+  } 
+  else if (total >= lower_mix and total < lower_unm) {
+    if ((tick_counter * tick_length) % 4000) < 2000{
+      digitalWrite(LED2_PIN,LOW);                                // red flashing 0.25 Hz
+    }
+    else{
+      digitalrite(LED2_PIN,HIGH);
+    }
     return 2;                                                    // Mixmodulated
-  } else if (total >= lower_unm) {
+  }
+  else if (total >= lower_unm) {
+    if ((tick_counter * tick_length) % 200) < 100{              // gren flashing 5Hz
+      digitalWrite(LED3_PIN,LOW);
+    }
+    else{
+      digitalWrite(LED3_PIN,HIGH);
+    }
     return 3;                                                    // Unmodulated
-  } else {
+  }
+  else {
     return 0;                                                    // Something weird???
   }
 }
