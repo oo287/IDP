@@ -563,8 +563,8 @@ void loop() {                                                    // Function tha
         }
       }
     }
-        
-    else if (robot_test_state == 0) {                  // main program
+// ------------------------------------------------------------MAIN PROGRAM------------------------------------------------------------
+    else if (robot_test_state == 0) {
       if (robot_state == 0) {
         if ((take_ultrasonic_reading() > 5) and (measure_IR_amplitude() < 1023)){                  // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
           follow_line();
@@ -590,7 +590,8 @@ void loop() {                                                    // Function tha
         }
       }
 
-      if (what_dummy_am_I == 1 and robot_state == 1){           // modulated dummy going to white box, at the end of this if statement the robot is on line facing dummy in white box
+      if (what_dummy_am_I == 1 and robot_state == 1){
+        // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
         if (robot_sub_state = 0){
           if (follow_line()){                                      //test state 1 is having just picked up dummy
             finished_dropping = drop_off_dummy();
@@ -617,7 +618,7 @@ void loop() {                                                    // Function tha
         }
       }
 
-      if (robot_state == 2){                                   // back out of drop off
+      if (robot_state == 2){                                   // finds the dummy from on line position in advanced area
         if (robot_sub_state == 0){
           if (not dummy_located){
             point_towards_nearest_dummy();
@@ -639,13 +640,14 @@ void loop() {                                                    // Function tha
           }
           if (picked_up_yet){
             delay_5s_start_time = 0;
-            robot_state = 1;
+            robot_state = 3;
             picked_up_yet = false;
           }
         }
       }
       
       if ((what_dummy_am_I == 2) and (robot_state == 1)){
+        // delivers first dummy that's on the line to the RED box  modulatee ir signal
         if ((not turn(180)) and (not turned_yet)){
         }
         else{
@@ -666,9 +668,20 @@ void loop() {                                                    // Function tha
       }
 
       if ((what_dummy_am_I == 3 and robot_state == 1)){
-        // 
+        // delivers first dummy that's on the line to the blue box mixed modulated ir signal
       }
 
+      if ((what_dummy_am_I == 1 and robot_state == 2)){
+        // delivers first dummy that's on the line to the blue box mixed modulated ir signal
+      }
+
+      if ((what_dummy_am_I == 2 and robot_state == 3)){
+        // delivers first dummy that's on the line to the blue box mixed modulated ir signal
+      }
+
+      if ((what_dummy_am_I == 3 and robot_state == 3)){
+        // delivers first dummy that's on the line to the blue box mixed modulated ir signal
+      }
       // if ((robot_test_state == 6) and (robot_state == 3)){         //first competetion breakaway point RESUME FROM HERE
       //   if ((not turn(180)) and (not turned_yet)){
       //   }
