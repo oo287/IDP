@@ -441,7 +441,7 @@ void setup() {                                                   // Function tha
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
 void loop() {                                                    // Function that runs repeatedly whilst the robot is on
 
-  if (digitalRead(BUTTON_PIN) == 1 or true) {                            // If button pressed to start the program
+  if (digitalRead(BUTTON_PIN) == 1) {                            // If button pressed to start the program
     program_started = true;                                      // Start program
   }
   
@@ -506,60 +506,60 @@ void loop() {                                                    // Function tha
     }
     else if (robot_test_state == 5) {                              // Test 5: Crash into dummy. Point at nearest dummy using IR and drive forwards. don't. stop.
       if (tick_counter*tick_length > 3000) {
-        if (not dummy_located) {
+        if (not dummy_located) {                                   // Use point_towards_nearest_dummy until dummy_located
           point_towards_nearest_dummy(10000,0.9,150);
         }
         else {
-          drive_motor(left_motor,255,false);
+          drive_motor(left_motor,255,false);                       // Drive!
           drive_motor(right_motor,255,false);
         }
       }
     }
-    else if (robot_test_state == 9) {
+    else if (robot_test_state == 9) {                              // Test 9: Use claw to grab, lift, drive, lower, release, reverse
   
-      if (tick_counter*tick_length < 3000) {
+      if (tick_counter*tick_length < 3000) {                       // Default state
         claw_servo.write(20);
         lift_servo.write(150);
       }
-      else if (tick_counter*tick_length < 4000) {
+      else if (tick_counter*tick_length < 4000) {                  // Grab
         claw_servo.write(70);
         lift_servo.write(150);
       }
-      else if (tick_counter*tick_length < 5000) {
+      else if (tick_counter*tick_length < 5000) {                  // Lift
         claw_servo.write(70);
         lift_servo.write(70);
       }
-      else if (tick_counter*tick_length < 17000) {
+      else if (tick_counter*tick_length < 17000) {                 // Drive
         claw_servo.write(70);
         lift_servo.write(70);
         drive_motor(right_motor,255,false);
         drive_motor(left_motor,255,false);
       }
-      else if (tick_counter*tick_length < 18000) {
+      else if (tick_counter*tick_length < 18000) {                 // Stop
         claw_servo.write(70);
         lift_servo.write(70);
         drive_motor(right_motor,0,false);
         drive_motor(left_motor,0,false);
       }
-      else if (tick_counter*tick_length < 18500) {
+      else if (tick_counter*tick_length < 18500) {                 // Lower
         claw_servo.write(70);
-        lift_servo.write(125);
+        lift_servo.write(145);
       }
-      else if (tick_counter*tick_length < 19000) {
+      else if (tick_counter*tick_length < 19000) {                 // Release
         claw_servo.write(20);
-        lift_servo.write(130);
+        lift_servo.write(145);
       }
-      else if (tick_counter*tick_length < 21000) {
+      else if (tick_counter*tick_length < 21000) {                 // Return to normal state
         claw_servo.write(20);
         lift_servo.write(150);
       }
-      else if (tick_counter*tick_length < 22000) {
+      else if (tick_counter*tick_length < 22000) {                 // Reverse away
         claw_servo.write(20);
         lift_servo.write(150);
         drive_motor(right_motor,255,true);
         drive_motor(left_motor,255,true);
       }
-      else if (tick_counter*tick_length < 23000) {
+      else if (tick_counter*tick_length < 23000) {                 // Stop
         claw_servo.write(20);
         lift_servo.write(150);
         drive_motor(right_motor,0,true);
@@ -569,7 +569,60 @@ void loop() {                                                    // Function tha
     
     else if (robot_test_state == 12) {                             // Test 12: Follow line
       if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
-        follow_line();                                         // Just run the follow_line() function (forwards)
+        follow_line();                                             // Just run the follow_line() function (forwards)
+      }
+    }
+    else if (robot_test_state == 13) {                             // Test 13: Drive until obstacle is 20cm away, then stop. Then turn until there is nothing for 100cm, then continue drive
+      bool temp_test_var = false;
+      if (tick_counter*tick_length > 3000) {                       // Wait [3] seconds before beginning test
+        if (not temp_test_var) {                                   // Driving forwards mode
+          if (take_ultrasonic_reading() > 20) {                    // If not 20cm away yet
+            drive_motor(left_motor,255,false);
+            drive_motor(right_motor,255,false);
+          }
+          else {
+            temp_test_var = true;                                  // Switch mode
+          }
+        }
+        if (temp_test_var) {                                       // Turning mode
+          if (take_ultrasonic_reading() < 100) {                   // If wall still closer than 100cm away
+            drive_motor(left_motor,255,false);
+            drive_motor(right_motor,255,true);
+          }
+          else {
+            temp_test_var = false;                                 // Switch mode
+          }
+        }
+      }
+    }
+    else if (robot_test_state == 14) {                             // Test 14: Locate and home dummy, then grab it.
+      int temp_test_var2 = 0;                                      // Represents what part of the test in.
+      if (tick_counter*tick_length > 3000) {                       // Wait 3 seconds
+        if (not dummy_located) {
+          point_towards_nearest_dummy(10000,0.9,150);              // Point towards dummy, use standard settings
+        }
+        else {
+          temp_test_var2 = 1;                                      // Located!
+        }
+        if (temp_test_var2 == 1) {                                 // Home_dummy until stopped right in front of it
+          if (home_dummy()) {
+            temp_test_var2 = 2;                                    // Switch mode again
+          }
+        }
+        if (temp_test_var2 == 2) {                                 // Use claw to grab dummy
+          if (pick_up_dummy()) {
+            temp_test_var2 = 3;                                    // Switch mode to idle
+          }
+        }
+        if (temp_test_var2 == 3) {                                 // Stop any motors that might be on still
+          drive_motor(left_motor,0,false);
+          drive_motor(right_motor,0,false);
+        }
+      }
+    }
+    else if (robot_test_state == 15) {                             // Test 15: Identify dummy. Whilst in front of dummy, blink the correct LEDs to show which dummy this one is       
+      if (tick_counter*tick_length > 3000) {                       // Wait 3 seconds
+        identify_dummy()                                           // Identify dummy testing
       }
     }
     else if (robot_test_state == 20) {
