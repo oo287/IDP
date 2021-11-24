@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = -1;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 9;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state =0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -25,8 +25,8 @@ const int TRIG_PIN = 13;                                         // TRIG and ECH
 const int ECHO_PIN = 12;
 const int IR_AMP_PIN = A3;                                       // Pin used to read the amplitude of the IR signal
 const int IR_MOD_PIN = 5;                                        // IR to detect modulation and hence identify dummeis
-const int SERVO_1_PIN = 10;                                      // Claw grab servo
-const int SERVO_2_PIN = 9;                                       // Claw lift servo
+const int SERVO_1_PIN = 9;                                      // Claw grab servo
+const int SERVO_2_PIN = 8;                                       // Claw lift servo
 const int BUTTON_PIN = 11;                                       // Pin for button to start the program (not stop if pressed again!)
 
 // --------- Sensor Variables ---------                          // --------- Sensor Variables ---------
@@ -336,35 +336,49 @@ int identify_dummy(){                                            // Reads IR inp
   //Serial.print(total);
   //Serial.print(" ");
   if (total >= lower_mod and total < lower_mix) {
-    if (((tick_counter * tick_length) % 2000) < 1000){
-      digitalWrite(LED2_PIN,LOW);                                   // red 2, green 3 both flashing 0.5Hz
-      digitalWrite(LED3_PIN,LOW);
-    }
-    else{
-      digitalWrite(LED2_PIN,HIGH);
-      digitalWrite(LED3_PIN,HIGH);
-    }
+//    if (((tick_counter * tick_length) % 2000) < 1000){
+//      digitalWrite(LED2_PIN,LOW);                                   // red 2, green 3 both flashing 0.5Hz
+//      digitalWrite(LED3_PIN,LOW);
+//    }
+//    else{
+//      digitalWrite(LED2_PIN,HIGH);
+//      digitalWrite(LED3_PIN,HIGH);
+//    }
+    digitalWrite(LED1_PIN,HIGH);
+    digitalWrite(LED2_PIN,LOW);
+    digitalWrite(LED3_PIN,LOW);
     return 1;                                                    // Modulated, white box
   } 
   else if (total >= lower_mix and total < lower_unm) {
-    if (((tick_counter * tick_length) % 4000) < 2000){
-      digitalWrite(LED2_PIN,LOW);                                // red flashing 0.25 Hz
-    }
-    else{
-      digitalWrite(LED2_PIN,HIGH);
-    }
+//    digitalWrite(LED3_PIN,LOW);
+//    if (((tick_counter * tick_length) % 4000) < 2000){
+//      digitalWrite(LED2_PIN,LOW);                                // red flashing 0.25 Hz
+//    }
+//    else{
+//      digitalWrite(LED2_PIN,HIGH);
+//    }
+    digitalWrite(LED1_PIN,LOW);
+    digitalWrite(LED2_PIN,HIGH);
+    digitalWrite(LED3_PIN,LOW);
     return 2;                                                    // Mixmodulated, blue box (left hand turn)
   }
   else if (total >= lower_unm) {
-    if (((tick_counter * tick_length) % 200) < 100){              // gren flashing 5Hz
-      digitalWrite(LED3_PIN,LOW);
-    }
-    else{
-      digitalWrite(LED3_PIN,HIGH);
-    }
+//    digitalWrite(LED2_PIN,LOW);
+//    if (((tick_counter * tick_length) % 200) < 100){              // gren flashing 5Hz
+//      digitalWrite(LED3_PIN,LOW);
+//    }
+//    else{
+//      digitalWrite(LED3_PIN,HIGH);
+//    }
+    digitalWrite(LED1_PIN,LOW);
+    digitalWrite(LED2_PIN,LOW);
+    digitalWrite(LED3_PIN,HIGH);
     return 3;                                                    // Unmodulated, red box (right hand turn)
   }
   else {
+    digitalWrite(LED1_PIN,HIGH);
+    digitalWrite(LED2_PIN,HIGH);
+    digitalWrite(LED3_PIN,HIGH);
     return 0;                                                    // Something weird???
   }
 }
@@ -441,7 +455,7 @@ void setup() {                                                   // Function tha
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
 void loop() {                                                    // Function that runs repeatedly whilst the robot is on
 
-  if (digitalRead(BUTTON_PIN) == 1) {                            // If button pressed to start the program
+  if (digitalRead(BUTTON_PIN) == 1 or true) {                            // If button pressed to start the program
     program_started = true;                                      // Start program
   }
   
@@ -468,7 +482,9 @@ void loop() {                                                    // Function tha
       Serial.print(", LS3: ");
       Serial.print(line_3);
       Serial.print(",");
-      Serial.println(analogRead(LS3_PIN));
+      Serial.print(analogRead(LS3_PIN));
+      Serial.print(", IR MOD: ");
+      Serial.println(identify_dummy());
     }
     else if (robot_test_state == 1) {                            // Test 1: Spin the wheels without control of any kind
       if (tick_counter*tick_length > 3000) {                     // Wait [3] seconds before beginning test
@@ -518,7 +534,7 @@ void loop() {                                                    // Function tha
     }
     else if (robot_test_state == 9) {                            // Test 9: Use claw to grab, lift, drive, lower, release, reverse
   
-      if (tick_counter*tick_length < 3000) {                     // Default state
+      if (tick_counter*tick_length < 10000000) {                     // Default state
         claw_servo.write(20);
         lift_servo.write(150);
       }
