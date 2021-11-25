@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 0;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 17;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -61,14 +61,11 @@ int home_adjust_distance = 20;
 int home_final_distance = 4;    
 unsigned long turn_timer = 0;                                    // Timer used for turning 360, 180 or 90 degrees
 
-const int full_360_time = 7000.0;                                  // Time taken for full 360 at set motor speed
-const int motor_360_speed = 255;                                 // Motor speed used for turning a full 360
+const int full_360_time = 6000;                                  // Time taken for full 360 at set motor speed
+const int motor_360_speed = 100;                                 // Motor speed used for turning a full 360
 
 unsigned long pick_up_dummy_start_time = 0;                      // Time to start picking up dummy
 unsigned long drop_off_dummy_start_time = 0;                     // Time to start dropping off dummy
-
-bool temp_test_var4 = false;
-
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();              // Create motorshield object called 'AFMS' with default I2C address. Put I2C address in brackets if different address needed
@@ -279,24 +276,20 @@ bool home_dummy() {                                              // Algorithm to
 }
 
 bool turn(int angle, bool clockwise = true) {                    // Turns a set angle. Should be accurate since uses carefully calibrated motor speed + turn time. Returns true when done
-  Serial.print("In turn");
+
   if (turn_timer == 0) {                                         // If haven't started turning yet
-    Serial.println("turn timer = 0");
-    Serial.println((angle/360)*full_360_time);
+
     turn_timer = tick_counter*tick_length;                       // Set current time to turn start time
     
   }
-  else if (tick_counter*tick_length < turn_timer + (angle/360.0)*full_360_time) {
+  else if (tick_counter*tick_length < turn_timer + (angle/full_360_time)) {
     drive_motor(left_motor, motor_360_speed, not clockwise);     // Drive for the correct proportion of a 360 turn at the calibrated speed
     drive_motor(right_motor, motor_360_speed, clockwise);
-    Serial.println("motors");
     return false;                                                // Not done yet so return false
   }
   else {
-    Serial.println("else we are here");
     drive_motor(left_motor, 0, false);                           // Stop motors
     drive_motor(right_motor, 0, false);
-    turn_timer = 0;
     return true;                                                 // Done so return true
   }
 }
@@ -648,12 +641,12 @@ void loop() {                                                    // Function tha
       }
     }
     else if (robot_test_state == 17) {
-      if (tick_counter*tick_length > 500) {
-        if (not temp_test_var4) {
-          temp_test_var4 = turn(180,false);
-        }
-        else {
-          digitalWrite(LED3_PIN,HIGH);
+      int temp_test_var4 = 0;
+      if (tick_counter*tick_length > 3000) {
+        if (temp_test_var4 == 0) {
+          if (turn(180,true)) {
+            temp_test_var4 = 1;
+          }
         }
       }
     }
@@ -717,10 +710,10 @@ void loop() {                                                    // Function tha
           if (delay_5s_start_time == 0){
             delay_5s_start_time = tick_counter*tick_length;
           }
-          if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 1600))){
+          if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
             what_dummy_am_I = identify_dummy();
           }
-          if ((tick_length * tick_counter) > (delay_5s_start_time + 1599) and not picked_up_yet){
+          if ((tick_length * tick_counter) > (delay_5s_start_time + 4999) and not picked_up_yet){
             picked_up_yet = pick_up_dummy();
             using_servos = true;
           }
@@ -728,13 +721,11 @@ void loop() {                                                    // Function tha
             delay_5s_start_time = 0;
             robot_state = 1;
             picked_up_yet = false;
-            drive_motor(left_motor,0,false);
-            drive_motor(right_motor,0,false);
           }
         }
       }
 
-      if ((what_dummy_am_I == 1 or true) and robot_state == 1){
+      if ((what_dummy_am_I == 1 and false) and robot_state == 1){
         // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
         if (robot_sub_state == 0){
           if (follow_line()){                                    //test state 1 is having just picked up dummy
@@ -760,12 +751,10 @@ void loop() {                                                    // Function tha
             robot_sub_state = 0;
             reverse_3s = 0;
             finished_dropping = false;
-            drive_motor(left_motor,0,false);
-            drive_motor(right_motor,0,false);
           }
         }
       }
-      if ((what_dummy_am_I == 2 or what_dummy_am_I == 3 and false) and (robot_state == 1)){
+      if ((what_dummy_am_I == 2 or what_dummy_am_I == 3 or true) and (robot_state == 1)){
         // delivers first dummy that's on the line to the RED box  modulatee ir signal
         if (robot_sub_state == 0){
           if (turn(180)){
@@ -794,11 +783,11 @@ void loop() {                                                    // Function tha
            if (what_dummy_am_I == 2){
             if(turn(90, true)){                                   //turn 90 clockwis
               finished_dropping = drop_off_dummy();
-              if (finished_dropping){                            //drops off red box dummy
-                robot_sub_state = 4;
-              }
+             if (finished_dropping){                            //drops off red box dummy
+               robot_sub_state = 4;
+             }
+             }
             }
-          }
            
            else{
               if(turn(90, false)){                                   //turn 90 anticlockwis
@@ -831,61 +820,61 @@ void loop() {                                                    // Function tha
         // }
       }
       
-      if (robot_state == 2){                                     // finds the dummy. Starts on the line (advanced area)
-        if (robot_sub_state == 0){
-          if (not dummy_located){
-            point_towards_nearest_dummy();
-          }
-          if (home_dummy()){                                     // gets you from the line to facing the dummy which is off the line
-            robot_sub_state = 1;
-            dummy_located = false;
-          }
-        }
-        if(robot_sub_state == 1){
-          if (delay_5s_start_time == 0){
-            delay_5s_start_time = tick_counter*tick_length;
-          }
-          if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
-            what_dummy_am_I = identify_dummy();
-          }
-          if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
-            picked_up_yet = pick_up_dummy();
-          }
-          if (picked_up_yet){                                    // identifies the dummy waits 5s and picks it up
-            delay_5s_start_time = 0;
-            robot_state = 3;
-            robot_sub_state = 0;
-            picked_up_yet = false;
-          }
-        }
-      }
-
-      if (robot_state == 3){                                     //found second dummy, need to return it to its home
-        if (robot_sub_state == 0){
-          if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
-            drive_motor(left_motor,255,true);
-            drive_motor(right_motor,255,true);
-          }
-          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line revers
-          else if(turn_onto_line()){
-            robot_sub_state = 1;
-            finished_dropping = false;
-          }
-        }
-        if (robot_sub_state == 1){
-        // if its the white box dummy, check which way we're facing and then re-use same code as it you've just picked it up when it was already on the line
-          if (take_ultrasonic_reading() < 100){
-            robot_state = 1;
-            robot_sub_state =0;
-          }
-          else {
-            if (turn(180)){
-              robot_state = 1;
-              robot_sub_state =0;
-            }
-          }
-        }
-      }
+//      if (robot_state == 2){                                     // finds the dummy. Starts on the line (advanced area)
+//        if (robot_sub_state == 0){
+//          if (not dummy_located){
+//            point_towards_nearest_dummy();
+//          }
+//          if (home_dummy()){                                     // gets you from the line to facing the dummy which is off the line
+//            robot_sub_state = 1;
+//            dummy_located = false;
+//          }
+//        }
+//        if(robot_sub_state == 1){
+//          if (delay_5s_start_time == 0){
+//            delay_5s_start_time = tick_counter*tick_length;
+//          }
+//          if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
+//            what_dummy_am_I = identify_dummy();
+//          }
+//          if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
+//            picked_up_yet = pick_up_dummy();
+//          }
+//          if (picked_up_yet){                                    // identifies the dummy waits 5s and picks it up
+//            delay_5s_start_time = 0;
+//            robot_state = 3;
+//            robot_sub_state = 0;
+//            picked_up_yet = false;
+//          }
+//        }
+//      }
+//
+//      if (robot_state == 3){                                     //found second dummy, need to return it to its home
+//        if (robot_sub_state == 0){
+//          if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
+//            drive_motor(left_motor,255,true);
+//            drive_motor(right_motor,255,true);
+//          }
+//          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line revers
+//          else if(turn_onto_line()){
+//            robot_sub_state = 1;
+//            finished_dropping = false;
+//          }
+//        }
+//        if (robot_sub_state == 1){
+//        // if its the white box dummy, check which way we're facing and then re-use same code as it you've just picked it up when it was already on the line
+//          if (take_ultrasonic_reading() < 100){
+//            robot_state = 1;
+//            robot_sub_state =0;
+//          }
+//          else {
+//            if (turn(180)){
+//              robot_state = 1;
+//              robot_sub_state =0;
+//            }
+//          }
+//        }
+//      }
 //
 //      // if ((robot_test_state == 6) and (robot_state == 3)){    //first competetion breakaway point RESUME FROM HERE not useable but some may be copy and pastable
 //      //   if ((not turn(180)) and (not turned_yet)){

@@ -717,7 +717,7 @@ void loop() {                                                    // Function tha
           if (delay_5s_start_time == 0){
             delay_5s_start_time = tick_counter*tick_length;
           }
-          if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 1600))){
+          if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
             what_dummy_am_I = identify_dummy();
           }
           if ((tick_length * tick_counter) > (delay_5s_start_time + 1599) and not picked_up_yet){
@@ -734,7 +734,7 @@ void loop() {                                                    // Function tha
         }
       }
 
-      if ((what_dummy_am_I == 1 or true) and robot_state == 1){
+      if ((what_dummy_am_I == 1 and false) and robot_state == 1){
         // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
         if (robot_sub_state == 0){
           if (follow_line()){                                    //test state 1 is having just picked up dummy
@@ -765,7 +765,7 @@ void loop() {                                                    // Function tha
           }
         }
       }
-      if ((what_dummy_am_I == 2 or what_dummy_am_I == 3 and false) and (robot_state == 1)){
+      if ((what_dummy_am_I == 2 or what_dummy_am_I == 3 or true) and (robot_state == 1)){
         // delivers first dummy that's on the line to the RED box  modulatee ir signal
         if (robot_sub_state == 0){
           if (turn(180)){
@@ -794,11 +794,11 @@ void loop() {                                                    // Function tha
            if (what_dummy_am_I == 2){
             if(turn(90, true)){                                   //turn 90 clockwis
               finished_dropping = drop_off_dummy();
-              if (finished_dropping){                            //drops off red box dummy
-                robot_sub_state = 4;
-              }
+             if (finished_dropping){                            //drops off red box dummy
+               robot_sub_state = 4;
+             }
+             }
             }
-          }
            
            else{
               if(turn(90, false)){                                   //turn 90 anticlockwis
@@ -831,61 +831,61 @@ void loop() {                                                    // Function tha
         // }
       }
       
-      if (robot_state == 2){                                     // finds the dummy. Starts on the line (advanced area)
-        if (robot_sub_state == 0){
-          if (not dummy_located){
-            point_towards_nearest_dummy();
-          }
-          if (home_dummy()){                                     // gets you from the line to facing the dummy which is off the line
-            robot_sub_state = 1;
-            dummy_located = false;
-          }
-        }
-        if(robot_sub_state == 1){
-          if (delay_5s_start_time == 0){
-            delay_5s_start_time = tick_counter*tick_length;
-          }
-          if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
-            what_dummy_am_I = identify_dummy();
-          }
-          if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
-            picked_up_yet = pick_up_dummy();
-          }
-          if (picked_up_yet){                                    // identifies the dummy waits 5s and picks it up
-            delay_5s_start_time = 0;
-            robot_state = 3;
-            robot_sub_state = 0;
-            picked_up_yet = false;
-          }
-        }
-      }
-
-      if (robot_state == 3){                                     //found second dummy, need to return it to its home
-        if (robot_sub_state == 0){
-          if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
-            drive_motor(left_motor,255,true);
-            drive_motor(right_motor,255,true);
-          }
-          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line revers
-          else if(turn_onto_line()){
-            robot_sub_state = 1;
-            finished_dropping = false;
-          }
-        }
-        if (robot_sub_state == 1){
-        // if its the white box dummy, check which way we're facing and then re-use same code as it you've just picked it up when it was already on the line
-          if (take_ultrasonic_reading() < 100){
-            robot_state = 1;
-            robot_sub_state =0;
-          }
-          else {
-            if (turn(180)){
-              robot_state = 1;
-              robot_sub_state =0;
-            }
-          }
-        }
-      }
+//      if (robot_state == 2){                                     // finds the dummy. Starts on the line (advanced area)
+//        if (robot_sub_state == 0){
+//          if (not dummy_located){
+//            point_towards_nearest_dummy();
+//          }
+//          if (home_dummy()){                                     // gets you from the line to facing the dummy which is off the line
+//            robot_sub_state = 1;
+//            dummy_located = false;
+//          }
+//        }
+//        if(robot_sub_state == 1){
+//          if (delay_5s_start_time == 0){
+//            delay_5s_start_time = tick_counter*tick_length;
+//          }
+//          if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
+//            what_dummy_am_I = identify_dummy();
+//          }
+//          if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
+//            picked_up_yet = pick_up_dummy();
+//          }
+//          if (picked_up_yet){                                    // identifies the dummy waits 5s and picks it up
+//            delay_5s_start_time = 0;
+//            robot_state = 3;
+//            robot_sub_state = 0;
+//            picked_up_yet = false;
+//          }
+//        }
+//      }
+//
+//      if (robot_state == 3){                                     //found second dummy, need to return it to its home
+//        if (robot_sub_state == 0){
+//          if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
+//            drive_motor(left_motor,255,true);
+//            drive_motor(right_motor,255,true);
+//          }
+//          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line revers
+//          else if(turn_onto_line()){
+//            robot_sub_state = 1;
+//            finished_dropping = false;
+//          }
+//        }
+//        if (robot_sub_state == 1){
+//        // if its the white box dummy, check which way we're facing and then re-use same code as it you've just picked it up when it was already on the line
+//          if (take_ultrasonic_reading() < 100){
+//            robot_state = 1;
+//            robot_sub_state =0;
+//          }
+//          else {
+//            if (turn(180)){
+//              robot_state = 1;
+//              robot_sub_state =0;
+//            }
+//          }
+//        }
+//      }
 //
 //      // if ((robot_test_state == 6) and (robot_state == 3)){    //first competetion breakaway point RESUME FROM HERE not useable but some may be copy and pastable
 //      //   if ((not turn(180)) and (not turned_yet)){
