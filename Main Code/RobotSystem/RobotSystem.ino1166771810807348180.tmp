@@ -47,9 +47,6 @@ bool dummy_located = false;                                      // If a dummy h
 int hit_cross_roads =0;                                          // used in test state 6 (first competition) to detect when hit cross roads and ignore it and carry on
 int scared = 2;
 
-int proximity_counter = 0;
-int counter_cutoff = 3;
-
 
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
 unsigned long delay_5s_start_time = 0;
@@ -364,13 +361,14 @@ bool pick_up_dummy(){                                            // Drive servos
   if (pick_up_dummy_start_time == 0) {
     pick_up_dummy_start_time = tick_counter*tick_length;         // Initialise
   }
-  else if (tick_counter*tick_length < pick_up_dummy_start_time + 500) {
-    claw_servo.write(70);
-    lift_servo.write(120);
+  else if (tick_counter*tick_length < pick_up_dummy_start_time + 1000) {
+    
+    //claw_servo.write(60);
+    //lift_servo.write(140);
   }
   else if (tick_counter*tick_length < pick_up_dummy_start_time + 1500) {
-    claw_servo.write(70);
-    lift_servo.write(70);
+    //claw_servo.write(60);
+    //lift_servo.write(70);
   }
   else {
     pick_up_dummy_start_time = 0;
@@ -447,10 +445,10 @@ void loop() {                                                    // Function tha
   }
   
   if (program_started) {
-    if (not using_servos) {
-      claw_servo.write(20);
-      lift_servo.write(120);
-    }
+//    if (not using_servos) {
+//      claw_servo.write(20);
+//      lift_servo.write(120);
+//    }
     if (robot_test_state == -1) {                                // Test -1: Display all sensor/input values
       Serial.print("IR Amp: ");
       Serial.print(measure_IR_amplitude(107));                   // IR Amplitude
@@ -680,21 +678,13 @@ void loop() {                                                    // Function tha
         }
       }
 
-// ------------------------------------------------------------ MAIN PROGRAM ------------------------------------------------------------
+// ------------------------------------------------------------MAIN PROGRAM------------------------------------------------------------
     else if (robot_test_state == 0) {
       if (robot_state == 0) {
-        int temp_ultrasonic = 0;
-        temp_ultrasonic = take_ultrasonic_reading();
-        if (temp_ultrasonic > 5){               // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+        if (take_ultrasonic_reading() > 5){               // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
           follow_line();
-          proximity_counter = 0;
-          digitalWrite(LED2_PIN,LOW);
-          digitalWrite(LED3_PIN,LOW);
         }
         else{
-          proximity_counter ++;
-        }
-        if (proximity_counter > counter_cutoff) {
           drive_motor(left_motor,0,false);                                    
           drive_motor(right_motor,0,false);
           if (delay_5s_start_time == 0){
@@ -705,13 +695,11 @@ void loop() {                                                    // Function tha
           }
           if ((tick_length * tick_counter) > (delay_5s_start_time + 4999) and not picked_up_yet){
             picked_up_yet = pick_up_dummy();
-            using_servos = true;
           }
           if (picked_up_yet){
             delay_5s_start_time = 0;
             robot_state = 1;
             picked_up_yet = false;
-            using_servos = false;
           }
         }
       }

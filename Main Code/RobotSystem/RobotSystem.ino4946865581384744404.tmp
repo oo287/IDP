@@ -10,7 +10,7 @@ int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
 unsigned const int tick_length = 20;                             // The length of one tick in milliseconds. Clock Frequency = 1/tick_length. Since IR sensor takes ~12ms, 20ms currently used
 bool program_started = false;                                    // Bool to store if the program start button has been pressed yet or not
-bool using_servos = false;                                       // Bool to track if we are using the servos
+
 
 // --------- Hardware Constants ---------                        // --------- Hardware Constants ---------
 const int LM_port =  3;                                          // Motor shield port that the left motor uses
@@ -46,9 +46,6 @@ int what_dummy_am_I;                                             // The dummy th
 bool dummy_located = false;                                      // If a dummy has been spotted using IR amplitude or not
 int hit_cross_roads =0;                                          // used in test state 6 (first competition) to detect when hit cross roads and ignore it and carry on
 int scared = 2;
-
-int proximity_counter = 0;
-int counter_cutoff = 3;
 
 
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
@@ -174,10 +171,10 @@ bool follow_line() {                                             // Function tha
   }                                                              
   else if ((line_1) and (not line_3)){                           // Hit line on LHS  so steering RIGHT
     drive_motor(left_motor, 255, false);
-    drive_motor(right_motor, 200, false);
+    drive_motor(right_motor, 150, false);
   }                                                              
   else if ((not line_1) and (line_3)){                           // Hit line on RHS  so steering LEFT
-    drive_motor(left_motor, 200, false);
+    drive_motor(left_motor, 150, false);
     drive_motor(right_motor, 255, false);
   }                                                              
   else if ((line_2) and (line_1) and (line_3)){                  // Hit horizontal line (return TRUE)
@@ -364,12 +361,12 @@ bool pick_up_dummy(){                                            // Drive servos
   if (pick_up_dummy_start_time == 0) {
     pick_up_dummy_start_time = tick_counter*tick_length;         // Initialise
   }
-  else if (tick_counter*tick_length < pick_up_dummy_start_time + 500) {
-    claw_servo.write(70);
-    lift_servo.write(120);
+  else if (tick_counter*tick_length < pick_up_dummy_start_time + 1000) {
+    claw_servo.write(60);
+    lift_servo.write(140);
   }
   else if (tick_counter*tick_length < pick_up_dummy_start_time + 1500) {
-    claw_servo.write(70);
+    claw_servo.write(60);
     lift_servo.write(70);
   }
   else {
@@ -384,12 +381,12 @@ bool drop_off_dummy(){                                           // Drive servos
     drop_off_dummy_start_time = tick_counter*tick_length;         // Initialise
   }
   else if (tick_counter*tick_length < drop_off_dummy_start_time + 1000) {
-    //claw_servo.write(70);
-    //lift_servo.write(150);
+    claw_servo.write(70);
+    lift_servo.write(150);
   }
   else if (tick_counter*tick_length < drop_off_dummy_start_time + 2000) {
-    //claw_servo.write(70);
-    //lift_servo.write(70);
+    claw_servo.write(70);
+    lift_servo.write(70);
     drop_off_dummy_start_time = 0;
     return true;
   }
@@ -434,9 +431,6 @@ void setup() {                                                   // Function tha
 
   claw_servo.attach(SERVO_1_PIN);
   lift_servo.attach(SERVO_2_PIN);
-
-  claw_servo.write(20);
-  lift_servo.write(120);
 }
 
 // --------- Main Loop ---------                                 // --------- Main Loop ---------
@@ -444,13 +438,17 @@ void loop() {                                                    // Function tha
 
   if (digitalRead(BUTTON_PIN) == 1) {                            // If button pressed to start the program
     program_started = true;                                      // Start program
+    Serial.println("ON");
+  }
+  else {
+    Serial.println("OFF");
   }
   
   if (program_started) {
-    if (not using_servos) {
-      claw_servo.write(20);
-      lift_servo.write(120);
-    }
+    //if (not(robot_test_state == 16)) {
+      //claw_servo.write(20);
+      //lift_servo.write(150);
+    //}
     if (robot_test_state == -1) {                                // Test -1: Display all sensor/input values
       Serial.print("IR Amp: ");
       Serial.print(measure_IR_amplitude(107));                   // IR Amplitude
@@ -522,11 +520,11 @@ void loop() {                                                    // Function tha
   
       if (tick_counter*tick_length < 3000) {                     // Default state
         claw_servo.write(20);
-        lift_servo.write(120);
+        lift_servo.write(140);
       }
       else if (tick_counter*tick_length < 4000) {                // Grab
         claw_servo.write(60);
-        lift_servo.write(120);
+        lift_servo.write(140);
       }
       else if (tick_counter*tick_length < 5000) {                // Lift
         claw_servo.write(60);
@@ -546,25 +544,25 @@ void loop() {                                                    // Function tha
       }
       else if (tick_counter*tick_length < 18500) {               // Lower
         claw_servo.write(60);
-        lift_servo.write(115);
+        lift_servo.write(135);
       }
       else if (tick_counter*tick_length < 19000) {               // Release
         claw_servo.write(20);
-        lift_servo.write(120);
+        lift_servo.write(140);
       }
       else if (tick_counter*tick_length < 21000) {               // Return to normal state
         claw_servo.write(20);
-        lift_servo.write(120);
+        lift_servo.write(140);
       }
       else if (tick_counter*tick_length < 22000) {               // Reverse away
         claw_servo.write(20);
-        lift_servo.write(120);
+        lift_servo.write(140);
         drive_motor(right_motor,255,true);
         drive_motor(left_motor,255,true);
       }
       else if (tick_counter*tick_length < 23000) {               // Stop
         claw_servo.write(20);
-        lift_servo.write(120);
+        lift_servo.write(140);
         drive_motor(right_motor,0,true);
         drive_motor(left_motor,0,true);
       }
@@ -630,8 +628,8 @@ void loop() {                                                    // Function tha
     }
     else if (robot_test_state == 16) {
       if (tick_counter*tick_length < 3000) {
-        //claw_servo.write(20);
-        //lift_servo.write(140);
+        claw_servo.write(20);
+        lift_servo.write(140);
       }
       else {
         bool temp_test_var3 = false;
@@ -680,21 +678,13 @@ void loop() {                                                    // Function tha
         }
       }
 
-// ------------------------------------------------------------ MAIN PROGRAM ------------------------------------------------------------
+// ------------------------------------------------------------MAIN PROGRAM------------------------------------------------------------
     else if (robot_test_state == 0) {
       if (robot_state == 0) {
-        int temp_ultrasonic = 0;
-        temp_ultrasonic = take_ultrasonic_reading();
-        if (temp_ultrasonic > 5){               // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+        if (take_ultrasonic_reading() > 5){               // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
           follow_line();
-          proximity_counter = 0;
-          digitalWrite(LED2_PIN,LOW);
-          digitalWrite(LED3_PIN,LOW);
         }
         else{
-          proximity_counter ++;
-        }
-        if (proximity_counter > counter_cutoff) {
           drive_motor(left_motor,0,false);                                    
           drive_motor(right_motor,0,false);
           if (delay_5s_start_time == 0){
@@ -705,13 +695,11 @@ void loop() {                                                    // Function tha
           }
           if ((tick_length * tick_counter) > (delay_5s_start_time + 4999) and not picked_up_yet){
             picked_up_yet = pick_up_dummy();
-            using_servos = true;
           }
           if (picked_up_yet){
             delay_5s_start_time = 0;
             robot_state = 1;
             picked_up_yet = false;
-            using_servos = false;
           }
         }
       }
