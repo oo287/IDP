@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 9;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 14;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -56,6 +56,7 @@ int counter_cutoff = 3;
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
 unsigned long delay_5s_start_time = 0;
 unsigned long reverse_3s = 0;
+unsigned long reverse_touch = 0;
 unsigned long drive_1s_timer = 0;
 unsigned long drive_1s_2 = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
@@ -64,7 +65,7 @@ int home_adjust_distance = 20;
 int home_final_distance = 4;    
 unsigned long turn_timer = 0;                                    // Timer used for turning 360, 180 or 90 degrees
 
-const int full_360_time = 6000.0;                                // Time taken for full 360 at set motor speed
+const int full_360_time = 9330.0;                                // Time taken for full 360 at set motor speed
 const int motor_360_speed = 255;                                 // Motor speed used for turning a full 360
 
 unsigned long pick_up_dummy_start_time = 0;                      // Time to start picking up dummy
@@ -201,7 +202,7 @@ bool follow_line() {                                             // Function tha
 }
 
                                                                  // Function to: Stop, spin on the spot, turn towards brighest dummy seen, stop again and set dummy_located = true
-void point_towards_nearest_dummy(int sweep_time = 6000, float threshold = 0.7, int motor_sweep_speed = 150) {
+void point_towards_nearest_dummy(int sweep_time = full_360_time, float threshold = 0.7, int motor_sweep_speed = 150) {
 
   if (sweep_start_time == 0 and not dummy_located) {             // If haven't started sweeping yet (first time activating function) and haven't already found dummy
     sweep_start_time = tick_counter*tick_length;                 // Set start time to current time
@@ -903,13 +904,17 @@ void loop() {                                                    // Function tha
           }
           if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 1600))){
             what_dummy_am_I = identify_dummy();
+            Serial.println("what dummy in state 0: ");
+            Serial.print(what_dummy_am_I);
             using_servos = false;
           }
           if ((tick_length * tick_counter) > (delay_5s_start_time + 1599) and not picked_up_yet){
             picked_up_yet = pick_up_dummy();
+            Serial.println("picking up");
             using_servos = true;
           }
           if (picked_up_yet){
+            Serial.println("now we have picked up");
             delay_5s_start_time = 0;
             robot_state = 1;
             picked_up_yet = false;
@@ -920,6 +925,7 @@ void loop() {                                                    // Function tha
       }
 
       if ((what_dummy_am_I == 1) and robot_state == 1){          // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
+        Serial.println(what_dummy_am_I);
         if (robot_sub_state == 0){
           if (follow_line()){                                //test state 1 is having just picked up dummy
             finished_dropping = drop_off_dummy();
@@ -952,7 +958,9 @@ void loop() {                                                    // Function tha
         }
       }
       if ((what_dummy_am_I == 2 or what_dummy_am_I == 3) and (robot_state == 1)){
+        Serial.println(what_dummy_am_I);
         // delivers first dummy that's on the line to the RED box  modulated ir signal, starts with dummy in grasp
+
         if (robot_sub_state == 0){                               // turns to face home
           if (turn(180)){
             robot_sub_state = 1;
@@ -972,6 +980,8 @@ void loop() {                                                    // Function tha
             follow_line();
           }
           else{
+            drive_motor(left_motor, 0, false);
+            drive_motor(left_motor, 0, false);
             robot_sub_state = 3;
           }
            
@@ -979,38 +989,50 @@ void loop() {                                                    // Function tha
         if (robot_sub_state == 3){
           if (what_dummy_am_I == 2){
             if(turn(90, true)){                                  //turn 90 clockwise
-              finished_dropping = drop_off_dummy();
-              if (finished_dropping){                            //drops off red box dummy
-                number_dummies_saved += 1;
-                robot_sub_state = 4;
-              }
+              robot_sub_state = 4;
             }
           }
           else{
-            if(turn(90, false)){                                 //turn 90 anticlockwise
-              finished_dropping = drop_off_dummy();
-              if (finished_dropping){                            //drops off blue box dummy
-                number_dummies_saved += 1;
-                robot_sub_state = 4;
-              }
+            if(turn(90, false)){                                  //turn 90 anticlockwise
+              robot_sub_state = 4;
             }
           }
         }
+        if (robot_sub_state == 4){
+          finished_dropping = drop_off_dummy();
+          if (finished_dropping){                            //drops off red box dummy
+            number_dummies_saved += 1;
+            robot_sub_state = 5;
+           }
+         }
+         
+        if (robot_sub_state == 5){
+          if (reverse_touch == 0){
+            reverse_touch = tick_counter * tick_length;
+          }                                                  //reverse for 2s
+          else if (tick_counter * tick_length < reverse_touch + 500){
+            drive_motor(left_motor,255,true);
+            drive_motor(right_motor,255,true);
+          }
+          else{
+            robot_sub_state = 7;
+          }
+        }
 
-        if (robot_sub_state == 4){                               // turns the robot back onto line facing danger area
+        if (robot_sub_state == 7){                               // turns the robot back onto line facing danger area
           if (what_dummy_am_I == 2){
             if(turn(90, true)){
-              robot_sub_state = 5;
+              robot_sub_state = 8;
             }
           }
           else {
             if(turn(90, false)){
-              robot_sub_state = 5;
+              robot_sub_state = 8;
             }
           }
         }
 
-        if (robot_sub_state == 5){
+        if (robot_sub_state == 8){
           int temp_ultrasonic = 0;
           temp_ultrasonic = take_ultrasonic_reading();
           if (temp_ultrasonic > 50){                             // this should drive us up over the ramp and stop 50cm from end so we can sweep for dummies again.
@@ -1026,6 +1048,7 @@ void loop() {                                                    // Function tha
             drive_motor(right_motor,0,false);
             robot_sub_state = 0;
             robot_state = 2;
+            what_dummy_am_I = 0;
           }
         }
 
