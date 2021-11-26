@@ -67,6 +67,7 @@ unsigned long pick_up_dummy_start_time = 0;                      // Time to star
 unsigned long drop_off_dummy_start_time = 0;                     // Time to start dropping off dummy
 
 bool temp_test_var4 = false;
+int temp_test_var5 = 0;
 
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
@@ -388,14 +389,16 @@ bool pick_up_dummy(){                                            // Drive servos
 bool drop_off_dummy(){                                           // Drive servos to released dummy. Return true when finished
   if (drop_off_dummy_start_time == 0) {
     drop_off_dummy_start_time = tick_counter*tick_length;        // Initialise
+    claw_servo.write(70);
+    lift_servo.write(70);
   }
   else if (tick_counter*tick_length < drop_off_dummy_start_time + 1000) {
     claw_servo.write(70);
-    lift_servo.write(120);
+    lift_servo.write(140);
   }
   else if (tick_counter*tick_length < drop_off_dummy_start_time + 2000) {
     claw_servo.write(20);
-    lift_servo.write(120);
+    lift_servo.write(140);
     drop_off_dummy_start_time = 0;
     return true;
   }
@@ -644,9 +647,6 @@ void loop() {                                                    // Function tha
         }
       }
     }
-    else if (robot_test_state == 18) {
-      
-    }
     else if (robot_test_state == 21) {                           // this corresponds to robot state 0 of main code
       if (take_ultrasonic_reading() > 5){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
         follow_line();
@@ -670,6 +670,39 @@ void loop() {                                                    // Function tha
         }
       }
     }
+    else if (robot_test_state == 22) {                       // Test 22: Accurate turning demo. 360 then reverse 360, 90 then reverse 90
+      if (tick_counter*tick_length < 3000) {
+        temp_test_var5 = 0;
+      }
+      else {
+        if (temp_test_var5 == 0) {
+          if (turn(360,false)) {
+            temp_test_var5 = 1;
+          }
+        }
+        else if (temp_test_var5 == 1) {
+          if (turn(360,true)) {
+            temp_test_var5 = 2;
+          }
+        }
+        else if (temp_test_var5 == 2) {
+          if (turn(90,false)) {
+            temp_test_var5 = 3;
+          }
+        }
+        else if (temp_test_var5 == 3) {
+          if (turn(90,true)) {
+            temp_test_var5 = 4;
+          }
+        }
+        else if (temp_test_var5 == 4) {
+          digitalWrite(LED3_PIN,HIGH);
+        }
+      }
+    }
+    else if (robot_test_state == 23) {
+      
+    }
       
 
 // ------------------------------------------------------------ MAIN PROGRAM ------------------------------------------------------------
@@ -691,9 +724,11 @@ void loop() {                                                    // Function tha
           drive_motor(right_motor,0,false);
           if (delay_5s_start_time == 0){
             delay_5s_start_time = tick_counter*tick_length;
+            using_servos = false;
           }
           if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 1600))){
             what_dummy_am_I = identify_dummy();
+            using_servos = false;
           }
           if ((tick_length * tick_counter) > (delay_5s_start_time + 1599) and not picked_up_yet){
             picked_up_yet = pick_up_dummy();
@@ -715,6 +750,7 @@ void loop() {                                                    // Function tha
             finished_dropping = drop_off_dummy();
             drive_motor(right_motor,0,false);
             drive_motor(left_motor,0,false);
+            using_servos = true;
           }
           if (finished_dropping){
             robot_sub_state = 1;
@@ -739,12 +775,14 @@ void loop() {                                                    // Function tha
           }
         }
       }
-      if ((what_dummy_am_I == 2 or what_dummy_am_I == 3 and false) and (robot_state == 1)){
+      if ((what_dummy_am_I == 2 or what_dummy_am_I == 3) and (robot_state == 1)){
         // delivers first dummy that's on the line to the RED box  modulatee ir signal
         if (robot_sub_state == 0){
           if (turn(180)){
             robot_sub_state = 1;
           }
+          drive_motor(left_motor,0,false);
+          drive_motor(right_motor,0,false);
         }
         if (robot_sub_state == 1){
           if (follow_line()){                                //drive back to start then count when over first cross roads
@@ -765,7 +803,7 @@ void loop() {                                                    // Function tha
            
         }
         if (robot_sub_state == 3){
-           if (what_dummy_am_I == 2){
+          if (what_dummy_am_I == 2){
             if(turn(90, true)){                              //turn 90 clockwis
               finished_dropping = drop_off_dummy();
               if (finished_dropping){                        //drops off red box dummy
@@ -774,14 +812,14 @@ void loop() {                                                    // Function tha
             }
           }
            
-           else{
-              if(turn(90, false)){                           //turn 90 anticlockwis
-                finished_dropping = drop_off_dummy();
+          else{
+            if(turn(90, false)){                             //turn 90 anticlockwis
+              finished_dropping = drop_off_dummy();
               if (finished_dropping){                        //drops off blue box dummy
                 robot_sub_state = 4;
               }
-              }
-           }
+            }
+          }
         }
 
         if (robot_sub_state == 4){
@@ -809,13 +847,17 @@ void loop() {                                                    // Function tha
         if (robot_sub_state == 0){
           if (not dummy_located){
             point_towards_nearest_dummy();
-          }
-          if (home_dummy()){                                     // gets you from the line to facing the dummy which is off the line
-            robot_sub_state = 1;
-            dummy_located = false;
+            if (dummy_located) {
+              robot_sub_state = 1;
+            }
           }
         }
-        if(robot_sub_state == 1){
+        if (robot_sub_state == 1) {
+          if (home_dummy()) {
+            robot_sub_state = 2;
+          }
+        }
+        if(robot_sub_state == 2){
           if (delay_5s_start_time == 0){
             delay_5s_start_time = tick_counter*tick_length;
           }
