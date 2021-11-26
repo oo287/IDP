@@ -783,7 +783,7 @@ void loop() {                                                    // Function tha
         }
       }
       if ((what_dummy_am_I == 2 or what_dummy_am_I == 3) and (robot_state == 1)){
-        // delivers first dummy that's on the line to the RED box  modulated ir signal
+        // delivers first dummy that's on the line to the RED box  modulated ir signal, starts with dummy in grasp
         if (robot_sub_state == 0){                               // turns to face home
           if (turn(180)){
             robot_sub_state = 1;
@@ -913,7 +913,7 @@ void loop() {                                                    // Function tha
         }
       }
 
-      if (robot_state == 3){                                     //found second dummy, need to return it to its home
+      if (robot_state == 3){                                     //found second dummy, need to return it to its home, goes back to prime posiiton with dummy in arms
         if (robot_sub_state == 0){
           if ((not line_1) and (not line_2) and (not line_3) and (picked_up_yet)){      // back up untill we hit line
             drive_motor(left_motor,255,true);
@@ -958,7 +958,8 @@ void loop() {                                                    // Function tha
             else{
               drive_motor(left_motor,0,false);
               drive_motor(right_motor,0,false):
-              //// FINISHED
+              robot_state = 5;
+              robot_sub_state = 0;
             }
           }
           if (follow_line()){
