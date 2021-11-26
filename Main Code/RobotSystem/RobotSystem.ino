@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 12;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 9;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -953,11 +953,11 @@ void loop() {                                                    // Function tha
           //drive 1s forward after first finding line so that when it turns 90 it will drop into box
             else if (tick_length * tick_counter < drive_1s_2 + 1000){
               drive_motor(left_motor,255,false);
-              drive_motor(right_motor,255,false):
+              drive_motor(right_motor,255,false);
             }
             else{
               drive_motor(left_motor,0,false);
-              drive_motor(right_motor,0,false):
+              drive_motor(right_motor,0,false);
               robot_state = 5;
               robot_sub_state = 0;
             }
@@ -967,7 +967,7 @@ void loop() {                                                    // Function tha
           }
           if (hit_cross_roads == 1){
             if (not follow_line()){                              // once it goes of the back of the line
-              hit_cross_roads == 2
+              hit_cross_roads == 2;
             }
           }
         }
