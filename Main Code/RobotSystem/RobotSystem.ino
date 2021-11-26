@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 0;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 22;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -60,14 +60,15 @@ int home_adjust_distance = 20;
 int home_final_distance = 4;    
 unsigned long turn_timer = 0;                                    // Timer used for turning 360, 180 or 90 degrees
 
-const int full_360_time = 7000.0;                                  // Time taken for full 360 at set motor speed
+const int full_360_time = 6600.0;                                // Time taken for full 360 at set motor speed
 const int motor_360_speed = 255;                                 // Motor speed used for turning a full 360
 
 unsigned long pick_up_dummy_start_time = 0;                      // Time to start picking up dummy
 unsigned long drop_off_dummy_start_time = 0;                     // Time to start dropping off dummy
 
 bool temp_test_var4 = false;
-int temp_test_var5 = 0;
+bool temp_test_var5 = false;
+int temp_test_var6 = 0;
 
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
@@ -670,38 +671,40 @@ void loop() {                                                    // Function tha
         }
       }
     }
-    else if (robot_test_state == 22) {                       // Test 22: Accurate turning demo. 360 then reverse 360, 90 then reverse 90
+    else if (robot_test_state == 22) {                       // Test 22: Test used to calibrate turning. Turns 2 full turns
+      if (not temp_test_var5) {
+        temp_test_var5 = turn(720);
+      }
+    }
+    else if (robot_test_state == 23) {                       // Test 23: Accurate turning demo
       if (tick_counter*tick_length < 3000) {
-        temp_test_var5 = 0;
+        temp_test_var6 = 0;
       }
       else {
-        if (temp_test_var5 == 0) {
+        if (temp_test_var6 == 0) {
           if (turn(360,false)) {
-            temp_test_var5 = 1;
+            temp_test_var6 = 1;
           }
         }
-        else if (temp_test_var5 == 1) {
+        else if (temp_test_var6 == 1) {
           if (turn(360,true)) {
-            temp_test_var5 = 2;
+            temp_test_var6 = 2;
           }
         }
-        else if (temp_test_var5 == 2) {
+        else if (temp_test_var6 == 2) {
           if (turn(90,false)) {
-            temp_test_var5 = 3;
+            temp_test_var6 = 3;
           }
         }
-        else if (temp_test_var5 == 3) {
+        else if (temp_test_var6 == 3) {
           if (turn(90,true)) {
-            temp_test_var5 = 4;
+            temp_test_var6 = 4;
           }
         }
-        else if (temp_test_var5 == 4) {
+        else if (temp_test_var6 == 4) {
           digitalWrite(LED3_PIN,HIGH);
         }
       }
-    }
-    else if (robot_test_state == 23) {
-      
     }
       
 

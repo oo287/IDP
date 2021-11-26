@@ -12,4 +12,5 @@ Tests that the Robot has been programmed to run (loosely correspond to milestone
 15) Identify dummy
 17) Test (and calibrate) turn(180)
 21) Run the main code section, robot state = 0
-22) Accurate turning demo
+22) Turning calibration program. 2 full turns
+23) Accurate turning demo
