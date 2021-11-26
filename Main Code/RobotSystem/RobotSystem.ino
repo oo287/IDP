@@ -11,6 +11,7 @@ unsigned long tick_counter = 0;                                  // Counts the n
 unsigned const int tick_length = 20;                             // The length of one tick in milliseconds. Clock Frequency = 1/tick_length. Since IR sensor takes ~12ms, 20ms currently used
 bool program_started = false;                                    // Bool to store if the program start button has been pressed yet or not
 bool using_servos = false;                                       // Bool to track if we are using the servos
+bool main_test_started = false;
 
 // --------- Hardware Constants ---------                        // --------- Hardware Constants ---------
 const int LM_port =  3;                                          // Motor shield port that the left motor uses
@@ -707,6 +708,174 @@ void loop() {                                                    // Function tha
         else if (temp_test_var6 == 4) {
           digitalWrite(LED3_PIN,HIGH);
         }
+      }
+    }
+    else if (robot_test_state == 100) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+      if (tick_counter*tick_length < 3000) {
+        if (tick_counter*tick_length % 500 < 250) {
+          digitalWrite(LED3_PIN,HIGH);
+        }
+        else {
+          digitalWrite(LED3_PIN,LOW);
+        }
+
+        robot_state = 0;
+        
+      }
+      else if (not main_test_started and robot_state == 0) {
+        digitalWrite(LED3_PIN,LOW);
+        main_test_started = true;
+      }
+      else if (robot_state != 0) {
+        main_test_started = false;
+        drive_motor(left_motor,0,false);
+        drive_motor(right_motor,0,false);
+      }
+    }
+    else if (robot_test_state == 110) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+      if (tick_counter*tick_length < 3000) {
+        if (tick_counter*tick_length % 500 < 250) {
+          digitalWrite(LED3_PIN,HIGH);
+        }
+        else {
+          digitalWrite(LED3_PIN,LOW);
+        }
+
+        robot_state = 1;
+        what_dummy_am_I = 1;
+        robot_sub_state = 0;
+        
+      }
+      else if (not main_test_started and robot_state == 1) {
+        digitalWrite(LED3_PIN,LOW);
+        main_test_started = true;
+      }
+      else if (robot_state != 1) {
+        main_test_started = false;
+        drive_motor(left_motor,0,false);
+        drive_motor(right_motor,0,false);
+      }
+    }
+    else if (robot_test_state == 111) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+      if (tick_counter*tick_length < 3000) {
+        if (tick_counter*tick_length % 500 < 250) {
+          digitalWrite(LED3_PIN,HIGH);
+        }
+        else {
+          digitalWrite(LED3_PIN,LOW);
+        }
+
+        robot_state = 1;
+        what_dummy_am_I = 2;
+        robot_sub_state = 0;
+        number_dummies_saved = 0;
+        
+      }
+      else if (not main_test_started and robot_state == 1) {
+        digitalWrite(LED3_PIN,LOW);
+        main_test_started = true;
+      }
+      else if (robot_sub_state > 3) {
+        main_test_started = false;
+        drive_motor(left_motor,0,false);
+        drive_motor(right_motor,0,false);
+      }
+    }
+    else if (robot_test_state == 112) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+      if (tick_counter*tick_length < 3000) {
+        if (tick_counter*tick_length % 500 < 250) {
+          digitalWrite(LED3_PIN,HIGH);
+        }
+        else {
+          digitalWrite(LED3_PIN,LOW);
+        }
+
+        robot_state = 1;
+        what_dummy_am_I = 2;
+        robot_sub_state = 4;
+        number_dummies_saved = 0;
+        
+      }
+      else if (not main_test_started and robot_state == 1) {
+        digitalWrite(LED3_PIN,LOW);
+        main_test_started = true;
+      }
+      else if (robot_state != 1) {
+        main_test_started = false;
+        drive_motor(left_motor,0,false);
+        drive_motor(right_motor,0,false);
+      }
+    }
+    else if (robot_test_state == 120) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+      if (tick_counter*tick_length < 3000) {
+        if (tick_counter*tick_length % 500 < 250) {
+          digitalWrite(LED3_PIN,HIGH);
+        }
+        else {
+          digitalWrite(LED3_PIN,LOW);
+        }
+
+        robot_state = 2;
+        robot_sub_state = 0;
+        number_dummies_saved = 1;
+        
+      }
+      else if (not main_test_started and robot_state == 2) {
+        digitalWrite(LED3_PIN,LOW);
+        main_test_started = true;
+      }
+      else if (robot_state != 2) {
+        main_test_started = false;
+        drive_motor(left_motor,0,false);
+        drive_motor(right_motor,0,false);
+      }
+    }
+    else if (robot_test_state == 130) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+      if (tick_counter*tick_length < 3000) {
+        if (tick_counter*tick_length % 500 < 250) {
+          digitalWrite(LED3_PIN,HIGH);
+        }
+        else {
+          digitalWrite(LED3_PIN,LOW);
+        }
+
+        robot_state = 3;
+        robot_sub_state = 0;
+        number_dummies_saved = 1;
+        
+      }
+      else if (not main_test_started and robot_state == 3) {
+        digitalWrite(LED3_PIN,LOW);
+        main_test_started = true;
+      }
+      else if (robot_state != 3) {
+        main_test_started = false;
+        drive_motor(left_motor,0,false);
+        drive_motor(right_motor,0,false);
+      }
+    }
+    else if (robot_test_state == 140) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+      if (tick_counter*tick_length < 3000) {
+        if (tick_counter*tick_length % 500 < 250) {
+          digitalWrite(LED3_PIN,HIGH);
+        }
+        else {
+          digitalWrite(LED3_PIN,LOW);
+        }
+
+        robot_state = 4;
+        robot_sub_state = 0;
+        number_dummies_saved = 3;
+        
+      }
+      else if (not main_test_started and robot_state == 4) {
+        digitalWrite(LED3_PIN,LOW);
+        main_test_started = true;
+      }
+      else if (robot_state != 4) {
+        main_test_started = false;
+        drive_motor(left_motor,0,false);
+        drive_motor(right_motor,0,false);
       }
     }
       
