@@ -41,11 +41,10 @@ bool horizontal_line = false;
 bool finished_dropping = false;
 bool picked_up_yet = false;
 bool turned_yet = false;
-bool are_we_pointing_at_dummy =false;
+bool are_we_pointing_at_dummy = false;
 int what_dummy_am_I;                                             // The dummy that is detected (0 for line, 1 for red box, 2 for blue box)
 bool dummy_located = false;                                      // If a dummy has been spotted using IR amplitude or not
 int hit_cross_roads =0;                                          // used in test state 6 (first competition) to detect when hit cross roads and ignore it and carry on
-int scared = 2;
 
 int proximity_counter = 0;
 int counter_cutoff = 3;
@@ -303,22 +302,22 @@ bool turn(int angle, bool clockwise = true) {                    // Turns a set 
 
 bool turn_onto_line(){
   read_line_sensors();
-  if (line_1){                                                    //if left line sensor on turn to left just as shorter
+  if (line_1){                                                   // If left line sensor on turn to left just as shorter
     drive_motor(right_motor, 255, false);
     drive_motor(left_motor, 255, true);
     return false;
   }
-  else if (line_3){                                               //if right line sensor on turn right
+  else if (line_3){                                              // If right line sensor on turn right
     drive_motor(right_motor, 255, true);
     drive_motor(left_motor, 255, false);
     return false;
   }
-  else if (not line_2){                                           // drive forward which gets you back onto line           
+  else if (not line_2){                                          // Drive forward which gets you back onto line           
     drive_motor(right_motor, 255, false);
     drive_motor(left_motor, 255, false);
     return false;
   }
-  else if ((line_2) and (not line_1) and (not line_3)){            // if this doesn't work, remember which you hit first and wait till we hit the other one
+  else if ((line_2) and (not line_1) and (not line_3)){          // if this doesn't work, remember which you hit first and wait till we hit the other one
     drive_motor(right_motor, 0, false);
     drive_motor(left_motor, 0, false);
     return true;
@@ -339,7 +338,7 @@ int identify_dummy(){                                            // Reads IR inp
   
   int sum = 0;
   for (int i = 0; i < samples; i++) {
-    sum = sum + (int) digitalRead(IR_MOD_PIN);                      // Continually sample value of wave, and add up total
+    sum = sum + (int) digitalRead(IR_MOD_PIN);                   // Continually sample value of wave, and add up total
   }
   float total = (float(sum)/float(samples));                     // Calculate mean value of wave
   
@@ -388,7 +387,7 @@ bool pick_up_dummy(){                                            // Drive servos
 
 bool drop_off_dummy(){                                           // Drive servos to released dummy. Return true when finished
   if (drop_off_dummy_start_time == 0) {
-    drop_off_dummy_start_time = tick_counter*tick_length;         // Initialise
+    drop_off_dummy_start_time = tick_counter*tick_length;        // Initialise
   }
   else if (tick_counter*tick_length < drop_off_dummy_start_time + 1000) {
     claw_servo.write(70);
@@ -424,7 +423,7 @@ void setup() {                                                   // Function tha
   pinMode(TRIG_PIN, OUTPUT);                                     // Use TRIG pin as output for ultrasonic sensor (this pin gives an ultrasonic pulse)
   pinMode(ECHO_PIN, INPUT);                                      // Use ECHO pin as input for ultrasonic sensor (this pin reads the echoed ultrasonic pulse from the TRIG pin)
   pinMode(IR_AMP_PIN,INPUT);                                     // Pin for measuring the amplitude of the IR sensor for use in locating dummies
-  pinMode(IR_MOD_PIN, INPUT);                                       // Pin for measuring modulated signal to detect dummies
+  pinMode(IR_MOD_PIN, INPUT);                                    // Pin for measuring modulated signal to detect dummies
   pinMode(BUTTON_PIN, INPUT);
   pinMode(SERVO_1_PIN, OUTPUT);
   pinMode(SERVO_2_PIN, OUTPUT);
@@ -482,7 +481,7 @@ void loop() {                                                    // Function tha
     else if (robot_test_state == 1) {                            // Test 1: Spin the wheels without control of any kind
       if (tick_counter*tick_length > 3000) {                     // Wait [3] seconds before beginning test
         drive_motor(left_motor,255,false);                       // Use the electrical function to spin each motor at max speed
-        drive_motor(right_motor,0,false);
+        drive_motor(right_motor,255,false);
       }
     }
     else if (robot_test_state == 2 or robot_test_state == 3) {   // Test 2/3: Drive forwards for a fixed time (to give ~1m forwards)
@@ -630,79 +629,55 @@ void loop() {                                                    // Function tha
         }
       }
     }
-    else if (robot_test_state == 15) {                             // Test 15: Identify dummy. Whilst in front of dummy, blink the correct LEDs to show which dummy this one is       
-      if (tick_counter*tick_length > 3000) {                       // Wait 3 seconds
-        identify_dummy();                                           // Identify dummy testing
+    else if (robot_test_state == 15) {                           // Test 15: Identify dummy. Whilst in front of dummy, blink the correct LEDs to show which dummy this one is       
+      if (tick_counter*tick_length > 3000) {                     // Wait 3 seconds
+        identify_dummy();                                        // Identify dummy testing
       }
     }
-    else if (robot_test_state == 16) {
-      if (tick_counter*tick_length < 3000) {
-        //claw_servo.write(20);
-        //lift_servo.write(140);
+    else if (robot_test_state == 17) {                           // Test 17: Turn 180 degrees then stop and turn the red LED on
+      if (tick_counter*tick_length > 500) {                      // Wait 0.5 seconds
+        if (not temp_test_var4) {                                // If not stopped yet
+          temp_test_var4 = turn(180,false);                      // Turn
+        }
+        else {
+          digitalWrite(LED3_PIN,HIGH);                           // Turn red LED on
+        }
+      }
+    }
+    else if (robot_test_state == 18) {
+      
+    }
+    else if (robot_test_state == 21) {                           // this corresponds to robot state 0 of main code
+      if (take_ultrasonic_reading() > 5){                        // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+        follow_line();
       }
       else {
-        bool temp_test_var3 = false;
-        if (pick_up_dummy() and not temp_test_var3) {
-          temp_test_var3 = true;
+        drive_motor(left_motor,0,false);                                    
+        drive_motor(right_motor,0,false);
+        if (delay_5s_start_time == 0){
+          delay_5s_start_time = tick_counter*tick_length;
+        }
+        if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
+          what_dummy_am_I = identify_dummy();
+        }
+        if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
+          picked_up_yet = pick_up_dummy();
+        }
+        if (picked_up_yet){
+          delay_5s_start_time = 0;
+          robot_state = 1;
+          picked_up_yet = false;
         }
       }
     }
-    else if (robot_test_state == 17) {
-      if (tick_counter*tick_length > 500) {
-        if (not temp_test_var4) {
-          temp_test_var4 = turn(180,false);
-        }
-        else {
-          digitalWrite(LED3_PIN,HIGH);
-        }
-      }
-    }
-    else if (robot_test_state == 20) {
-      if (scared == 2) {
-        scared = 0;
-      }
-      if (tick_counter*tick_length > 3000) {
-        if (measure_IR_amplitude() < 200 and take_ultrasonic_reading() > 20 and scared == 0) {
-          follow_line();
-        }
-        else {
-          if (scared == 0) {
-            scared = 1;
-          }
-          follow_line();
-        }
-      }
-    }
-    else if (robot_test_state == 21) {                            // this corresponds to robot state 0 of main code
-        if ((take_ultrasonic_reading() > 5) and (measure_IR_amplitude() < 1023)){                  // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
-          follow_line();
-        }
-        else {
-          drive_motor(left_motor,0,false);                                    
-          drive_motor(right_motor,0,false);
-          if (delay_5s_start_time == 0){
-            delay_5s_start_time = tick_counter*tick_length;
-          }
-          if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
-            what_dummy_am_I = identify_dummy();
-          }
-          if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
-            picked_up_yet = pick_up_dummy();
-          }
-          if (picked_up_yet){
-            delay_5s_start_time = 0;
-            robot_state = 1;
-            picked_up_yet = false;
-          }
-        }
-      }
+      
 
 // ------------------------------------------------------------ MAIN PROGRAM ------------------------------------------------------------
     else if (robot_test_state == 0) {
       if (robot_state == 0) {
         int temp_ultrasonic = 0;
         temp_ultrasonic = take_ultrasonic_reading();
-        if (temp_ultrasonic > 8){               // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+        if (temp_ultrasonic > 8){                            // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
           follow_line();
           proximity_counter = 0;
           digitalWrite(LED2_PIN,LOW);
@@ -734,10 +709,9 @@ void loop() {                                                    // Function tha
         }
       }
 
-      if ((what_dummy_am_I == 1 or true) and robot_state == 1){
-        // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
+      if ((what_dummy_am_I == 1) and robot_state == 1){      // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
         if (robot_sub_state == 0){
-          if (follow_line()){                                    //test state 1 is having just picked up dummy
+          if (follow_line()){                                //test state 1 is having just picked up dummy
             finished_dropping = drop_off_dummy();
             drive_motor(right_motor,0,false);
             drive_motor(left_motor,0,false);
@@ -750,7 +724,7 @@ void loop() {                                                    // Function tha
         if (robot_sub_state == 1){
           if (reverse_3s == 0){
             reverse_3s = tick_counter * tick_length;
-          }                                                      //reverse for 2s
+          }                                                  //reverse for 2s
           else if (tick_counter * tick_length < reverse_3s + 2000){
             drive_motor(left_motor,255,true);
             drive_motor(right_motor,255,true);
@@ -773,7 +747,7 @@ void loop() {                                                    // Function tha
           }
         }
         if (robot_sub_state == 1){
-          if (follow_line()){                                    //drive back to start then count when over first cross roads
+          if (follow_line()){                                //drive back to start then count when over first cross roads
             robot_sub_state = 2;
           }
         }
@@ -781,7 +755,7 @@ void loop() {                                                    // Function tha
 
               if (drive_1s_timer == 0){
                 drive_1s_timer = tick_counter * tick_length; 
-              }                                                  //drive 1s forward so that when it turns its facing box
+              }                                              //drive 1s forward so that when it turns its facing box
               else if (tick_length * tick_counter < drive_1s_timer + 1000){
                 follow_line();
               }
@@ -792,18 +766,18 @@ void loop() {                                                    // Function tha
         }
         if (robot_sub_state == 3){
            if (what_dummy_am_I == 2){
-            if(turn(90, true)){                                   //turn 90 clockwis
+            if(turn(90, true)){                              //turn 90 clockwis
               finished_dropping = drop_off_dummy();
-              if (finished_dropping){                            //drops off red box dummy
+              if (finished_dropping){                        //drops off red box dummy
                 robot_sub_state = 4;
               }
             }
           }
            
            else{
-              if(turn(90, false)){                                   //turn 90 anticlockwis
+              if(turn(90, false)){                           //turn 90 anticlockwis
                 finished_dropping = drop_off_dummy();
-              if (finished_dropping){                            //drops off blue box dummy
+              if (finished_dropping){                        //drops off blue box dummy
                 robot_sub_state = 4;
               }
               }
