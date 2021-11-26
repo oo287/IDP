@@ -44,9 +44,11 @@ bool turned_yet = false;
 bool are_we_pointing_at_dummy = false;
 int what_dummy_am_I;                                             // The dummy that is detected (0 for line, 1 for red box, 2 for blue box)
 bool dummy_located = false;                                      // If a dummy has been spotted using IR amplitude or not
+int number_dummies_saved =0;
 int hit_cross_roads =0;                                          // used in test state 6 (first competition) to detect when hit cross roads and ignore it and carry on
 
 int proximity_counter = 0;
+int proximity_counter_2 = 0;
 int counter_cutoff = 3;
 
 
@@ -756,6 +758,7 @@ void loop() {                                                    // Function tha
             using_servos = true;
           }
           if (finished_dropping){
+            number_dummies_saved += 1;
             robot_sub_state = 1;
             using_servos = false;
           }
@@ -779,13 +782,11 @@ void loop() {                                                    // Function tha
         }
       }
       if ((what_dummy_am_I == 2 or what_dummy_am_I == 3) and (robot_state == 1)){
-        // delivers first dummy that's on the line to the RED box  modulatee ir signal
+        // delivers first dummy that's on the line to the RED box  modulated ir signal
         if (robot_sub_state == 0){
           if (turn(180)){
             robot_sub_state = 1;
           }
-          drive_motor(left_motor,0,false);
-          drive_motor(right_motor,0,false);
         }
         if (robot_sub_state == 1){
           if (follow_line()){                                //drive back to start then count when over first cross roads
@@ -793,16 +794,15 @@ void loop() {                                                    // Function tha
           }
         }
         if (robot_sub_state == 2){
-
-              if (drive_1s_timer == 0){
-                drive_1s_timer = tick_counter * tick_length; 
-              }                                              //drive 1s forward so that when it turns its facing box
-              else if (tick_length * tick_counter < drive_1s_timer + 1000){
-                follow_line();
-              }
-              else{
-                robot_sub_state = 3;
-              }
+          if (drive_1s_timer == 0){
+            drive_1s_timer = tick_counter * tick_length; 
+          }                                              //drive 1s forward so that when it turns its facing box
+          else if (tick_length * tick_counter < drive_1s_timer + 1000){
+            follow_line();
+          }
+          else{
+            robot_sub_state = 3;
+          }
            
         }
         if (robot_sub_state == 3){
@@ -810,24 +810,51 @@ void loop() {                                                    // Function tha
             if(turn(90, true)){                              //turn 90 clockwis
               finished_dropping = drop_off_dummy();
               if (finished_dropping){                        //drops off red box dummy
+                number_dummies_saved += 1;
                 robot_sub_state = 4;
               }
             }
           }
-           
           else{
             if(turn(90, false)){                             //turn 90 anticlockwis
               finished_dropping = drop_off_dummy();
               if (finished_dropping){                        //drops off blue box dummy
+                number_dummies_saved += 1;
                 robot_sub_state = 4;
               }
             }
           }
         }
 
-        if (robot_sub_state == 4){
-          drive_motor(left_motor, 0, false);
-          drive_motor(right_motor, 0, false);
+        if (robot_sub_state == 4){                               // turns the robot back onto line
+          if (what_dummy_am_I == 2){
+            if(turn(90, true)){
+              robot_sub_state = 5;
+            }
+          }
+          else {
+            if(turn(90, false)){
+              robot_sub_state = 5;
+            }
+          }
+        }
+
+        if (robot_sub_state == 5){
+          int temp_ultrasonic = 0;
+          temp_ultrasonic = take_ultrasonic_reading();
+          if (temp_ultrasonic > 50){                            // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+            follow_line();
+            proximity_counter_2 = 0;
+          }
+          else{
+            proximity_counter_2 ++;
+          }
+          if (proximity_counter_2 > counter_cutoff) {
+            drive_motor(left_motor,0,false);
+            drive_motor(right_motor,0,false);
+            robot_sub_state = 0;
+            robot_state = 2;
+          }
         }
 
 
@@ -875,6 +902,7 @@ void loop() {                                                    // Function tha
             robot_state = 3;
             robot_sub_state = 0;
             picked_up_yet = false;
+            dummy_located = false;
           }
         }
       }
