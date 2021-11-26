@@ -56,6 +56,7 @@ int counter_cutoff = 3;
 unsigned long delay_5s_start_time = 0;
 unsigned long reverse_3s = 0;
 unsigned long drive_1s_timer = 0;
+unsigned long drive_1s_2 = 0;
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
 unsigned long adjust_start_time = 0;                             // Timer used for the timing of the sweep in the adjust action 
 int home_adjust_distance = 20;
@@ -673,12 +674,12 @@ void loop() {                                                    // Function tha
         }
       }
     }
-    else if (robot_test_state == 22) {                       // Test 22: Test used to calibrate turning. Turns 2 full turns
+    else if (robot_test_state == 22) {                           // Test 22: Test used to calibrate turning. Turns 2 full turns
       if (not temp_test_var5) {
         temp_test_var5 = turn(720);
       }
     }
-    else if (robot_test_state == 23) {                       // Test 23: Accurate turning demo
+    else if (robot_test_state == 23) {                           // Test 23: Accurate turning demo
       if (tick_counter*tick_length < 3000) {
         temp_test_var6 = 0;
       }
@@ -715,7 +716,7 @@ void loop() {                                                    // Function tha
       if (robot_state == 0) {
         int temp_ultrasonic = 0;
         temp_ultrasonic = take_ultrasonic_reading();
-        if (temp_ultrasonic > 8){                            // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+        if (temp_ultrasonic > 8){                                // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
           follow_line();
           proximity_counter = 0;
           digitalWrite(LED2_PIN,LOW);
@@ -749,7 +750,7 @@ void loop() {                                                    // Function tha
         }
       }
 
-      if ((what_dummy_am_I == 1) and robot_state == 1){      // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
+      if ((what_dummy_am_I == 1) and robot_state == 1){          // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
         if (robot_sub_state == 0){
           if (follow_line()){                                //test state 1 is having just picked up dummy
             finished_dropping = drop_off_dummy();
@@ -783,20 +784,21 @@ void loop() {                                                    // Function tha
       }
       if ((what_dummy_am_I == 2 or what_dummy_am_I == 3) and (robot_state == 1)){
         // delivers first dummy that's on the line to the RED box  modulated ir signal
-        if (robot_sub_state == 0){
+        if (robot_sub_state == 0){                               // turns to face home
           if (turn(180)){
             robot_sub_state = 1;
           }
         }
         if (robot_sub_state == 1){
-          if (follow_line()){                                //drive back to start then count when over first cross roads
+          if (follow_line()){                                    //drive back to start untill encounter cross roads
             robot_sub_state = 2;
           }
         }
         if (robot_sub_state == 2){
           if (drive_1s_timer == 0){
             drive_1s_timer = tick_counter * tick_length; 
-          }                                              //drive 1s forward so that when it turns its facing box
+          } 
+        //drive 1s forward after first finding line so that when it turns 90 it will drop into box
           else if (tick_length * tick_counter < drive_1s_timer + 1000){
             follow_line();
           }
@@ -807,18 +809,18 @@ void loop() {                                                    // Function tha
         }
         if (robot_sub_state == 3){
           if (what_dummy_am_I == 2){
-            if(turn(90, true)){                              //turn 90 clockwis
+            if(turn(90, true)){                                  //turn 90 clockwise
               finished_dropping = drop_off_dummy();
-              if (finished_dropping){                        //drops off red box dummy
+              if (finished_dropping){                            //drops off red box dummy
                 number_dummies_saved += 1;
                 robot_sub_state = 4;
               }
             }
           }
           else{
-            if(turn(90, false)){                             //turn 90 anticlockwis
+            if(turn(90, false)){                                 //turn 90 anticlockwise
               finished_dropping = drop_off_dummy();
-              if (finished_dropping){                        //drops off blue box dummy
+              if (finished_dropping){                            //drops off blue box dummy
                 number_dummies_saved += 1;
                 robot_sub_state = 4;
               }
@@ -826,7 +828,7 @@ void loop() {                                                    // Function tha
           }
         }
 
-        if (robot_sub_state == 4){                               // turns the robot back onto line
+        if (robot_sub_state == 4){                               // turns the robot back onto line facing danger area
           if (what_dummy_am_I == 2){
             if(turn(90, true)){
               robot_sub_state = 5;
@@ -842,7 +844,8 @@ void loop() {                                                    // Function tha
         if (robot_sub_state == 5){
           int temp_ultrasonic = 0;
           temp_ultrasonic = take_ultrasonic_reading();
-          if (temp_ultrasonic > 50){                            // this should drive us up over the ramp to the first dummy no idea what the ir value should be right now
+          if (temp_ultrasonic > 50){                             // this should drive us up over the ramp and stop 50cm from end so we can sweep for dummies again.
+                                                                 // requires 3 US values under 50cm in a row to activate to avoid any random disturbance
             follow_line();
             proximity_counter_2 = 0;
           }
@@ -874,6 +877,9 @@ void loop() {                                                    // Function tha
       }
       
       if (robot_state == 2){                                     // finds the dummy. Starts on the line (advanced area)
+        if (number_dummies_saved == 3){
+          robot_state = 4;
+        }
         if (robot_sub_state == 0){
           if (not dummy_located){
             point_towards_nearest_dummy();
@@ -929,6 +935,38 @@ void loop() {                                                    // Function tha
             if (turn(180)){
               robot_state = 1;
               robot_sub_state =0;
+            }
+          }
+        }
+      }
+      if (robot_state == 4){                                     // this is the go home part of the algorithm
+        if (robot_sub_state == 0){                               // turns around so facing home
+          if (turn(180)){
+            robot_sub_state =1;
+          }
+        }
+        if (robot_sub_state == 1){
+          if (follow_line() and hit_cross_roads == 2){
+            if (drive_1s_2 == 0){
+              drive_1s_2 = tick_counter * tick_length; 
+            } 
+          //drive 1s forward after first finding line so that when it turns 90 it will drop into box
+            else if (tick_length * tick_counter < drive_1s_2 + 1000){
+              drive_motor(left_motor,255,false);
+              drive_motor(right_motor,255,false):
+            }
+            else{
+              drive_motor(left_motor,0,false);
+              drive_motor(right_motor,0,false):
+              //// FINISHED
+            }
+          }
+          if (follow_line()){
+            hit_cross_roads = 1;                                 // hit first cross roads but want to continue
+          }
+          if (hit_cross_roads == 1){
+            if (not follow_line()){                              // once it goes of the back of the line
+              hit_cross_roads == 2
             }
           }
         }
