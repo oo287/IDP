@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 22;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 12;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -60,7 +60,7 @@ int home_adjust_distance = 20;
 int home_final_distance = 4;    
 unsigned long turn_timer = 0;                                    // Timer used for turning 360, 180 or 90 degrees
 
-const int full_360_time = 6600.0;                                // Time taken for full 360 at set motor speed
+const int full_360_time = 6000.0;                                // Time taken for full 360 at set motor speed
 const int motor_360_speed = 255;                                 // Motor speed used for turning a full 360
 
 unsigned long pick_up_dummy_start_time = 0;                      // Time to start picking up dummy
