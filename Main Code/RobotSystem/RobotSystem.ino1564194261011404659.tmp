@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 120;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 110;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -56,8 +56,6 @@ int counter_cutoff = 3;
 bool currently_adjusting = false;                                // Bool used by home_dummy() to track when the robot is currently doing an adjustment sweep
 bool finished_adjusting = false;
 
-bool hit_line_1 = false;
-
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
 unsigned long delay_5s_start_time = 0;
 unsigned long reverse_3s = 0;
@@ -76,8 +74,6 @@ const int motor_360_speed = 255;                                 // Motor speed 
 
 unsigned long pick_up_dummy_start_time = 0;                      // Time to start picking up dummy
 unsigned long drop_off_dummy_start_time = 0;                     // Time to start dropping off dummy
-
-unsigned long avoid_first_sweep_time = 0;
 
 int proximity_counter2 = 0;
 
@@ -311,8 +307,6 @@ bool home_dummy() {
     proximity_counter2 = 0;
   }
   if (proximity_counter2 > 5) {
-    drive_motor(left_motor,0,false);
-    drive_motor(right_motor,0,false);
     return true;
   }
   else {
@@ -828,11 +822,10 @@ void loop() {                                                    // Function tha
         digitalWrite(LED3_PIN,LOW);
         main_test_started = true;
       }
-      else if (robot_state != 1) {
+      else if (robot_state != 0) {
         main_test_started = false;
         drive_motor(left_motor,0,false);
         drive_motor(right_motor,0,false);
-        digitalWrite(LED3_PIN,HIGH);
       }
     }
     else if (robot_test_state == 111) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
@@ -858,7 +851,6 @@ void loop() {                                                    // Function tha
         main_test_started = false;
         drive_motor(left_motor,0,false);
         drive_motor(right_motor,0,false);
-        digitalWrite(LED3_PIN,HIGH);
       }
     }
     else if (robot_test_state == 112) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
@@ -884,7 +876,6 @@ void loop() {                                                    // Function tha
         main_test_started = false;
         drive_motor(left_motor,0,false);
         drive_motor(right_motor,0,false);
-        digitalWrite(LED3_PIN,HIGH);
       }
     }
     else if (robot_test_state == 120) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
@@ -909,7 +900,6 @@ void loop() {                                                    // Function tha
         main_test_started = false;
         drive_motor(left_motor,0,false);
         drive_motor(right_motor,0,false);
-        digitalWrite(LED3_PIN,HIGH);
       }
     }
     else if (robot_test_state == 130) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
@@ -934,7 +924,6 @@ void loop() {                                                    // Function tha
         main_test_started = false;
         drive_motor(left_motor,0,false);
         drive_motor(right_motor,0,false);
-        digitalWrite(LED3_PIN,HIGH);
       }
     }
     else if (robot_test_state == 140) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
@@ -959,7 +948,6 @@ void loop() {                                                    // Function tha
         main_test_started = false;
         drive_motor(left_motor,0,false);
         drive_motor(right_motor,0,false);
-        digitalWrite(LED3_PIN,HIGH);
       }
     }
       
@@ -985,14 +973,14 @@ void loop() {                                                    // Function tha
             delay_5s_start_time = tick_counter*tick_length;
             using_servos = false;
           }
-          else if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 2500))){
+          else if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 1600))){
             //what_dummy_am_I = identify_dummy();
             what_dummy_am_I = 1;
             //Serial.println("what dummy in state 0: ");
             //Serial.print(what_dummy_am_I);
             using_servos = false;
           }
-          else if ((tick_length * tick_counter) > (delay_5s_start_time + 2499) and not picked_up_yet){
+          else if ((tick_length * tick_counter) > (delay_5s_start_time + 1599) and not picked_up_yet){
             using_servos = true;
             picked_up_yet = pick_up_dummy();
             //Serial.println("picking up");
@@ -1009,23 +997,19 @@ void loop() {                                                    // Function tha
       if ((what_dummy_am_I == 1) and robot_state == 1){          // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
         //Serial.println(what_dummy_am_I);
         if (robot_sub_state == 0){
-          hit_line_1 = follow_line();
-          if (hit_line_1) { 
-            robot_sub_state = 1;
+          if (follow_line()){                                //test state 1 is having just picked up dummy
+            finished_dropping = drop_off_dummy();
+            drive_motor(right_motor,0,false);
+            drive_motor(left_motor,0,false);
+            using_servos = true;
           }
-        }
-        if (robot_sub_state == 1) {
-          finished_dropping = drop_off_dummy();
-          drive_motor(right_motor,0,false);
-          drive_motor(left_motor,0,false);
-          using_servos = true;
-          if (finished_dropping) {
+          else if (finished_dropping){
             number_dummies_saved += 1;
-            robot_sub_state = 2;
+            robot_sub_state = 1;
             using_servos = false;
           }
         }
-        else if (robot_sub_state == 2){
+        if (robot_sub_state == 1){
           if (reverse_3s == 0){
             reverse_3s = tick_counter * tick_length;
           }                                                  //reverse for 2s
@@ -1158,47 +1142,30 @@ void loop() {                                                    // Function tha
         if (number_dummies_saved == 3){
           robot_state = 4;
         }
-        if (robot_sub_state == 0) {
-          if (avoid_first_sweep_time == 0) {
-            avoid_first_sweep_time = tick_counter*tick_length;
-          }
-          else if (tick_counter*tick_length < avoid_first_sweep_time + 500) {
-            drive_motor(left_motor,255,true);
-            drive_motor(right_motor,255,false);
-          }
-          else if (tick_counter*tick_length < avoid_first_sweep_time + 1500) {
-            drive_motor(left_motor,0,false);
-            drive_motor(right_motor,0,false);
-          }
-          else {
-            robot_sub_state = 1;
+        if (robot_sub_state == 0){
+          if (not dummy_located){
+            point_towards_nearest_dummy();
+            if (dummy_located) {
+              robot_sub_state = 1;
+            }
           }
         }
-        if (robot_sub_state == 1){
-          if (point_towards_nearest_dummy(9000,0.8,255)) {
+        if (robot_sub_state == 1) {
+          if (home_dummy()) {
             robot_sub_state = 2;
           }
         }
-        if (robot_sub_state == 2) {
-          if (home_dummy()) {
-            robot_sub_state = 3;
-          }
-        }
-        if (robot_sub_state == 3) {
+        if(robot_sub_state == 2){
           if (delay_5s_start_time == 0){
-            using_servos = false;
             delay_5s_start_time = tick_counter*tick_length;
           }
-          else if (((tick_counter * tick_counter) > (-1+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 2500))){
-            using_servos = false;
+          if (((tick_counter * tick_counter) > (0+delay_5s_start_time)) and ((tick_counter * tick_length) < (delay_5s_start_time + 5000))){
             what_dummy_am_I = identify_dummy();
           }
-          else if ((tick_length * tick_counter) > (delay_5s_start_time + 2499)){
-            using_servos = true;
+          if ((tick_length * tick_counter) > (delay_5s_start_time + 5000)){
             picked_up_yet = pick_up_dummy();
           }
-          else if (picked_up_yet){                                    // identifies the dummy waits 5s and picks it up
-            using_servos = false;
+          if (picked_up_yet){                                    // identifies the dummy waits 5s and picks it up
             delay_5s_start_time = 0;
             robot_state = 3;
             robot_sub_state = 0;
