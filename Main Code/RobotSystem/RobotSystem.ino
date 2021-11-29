@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 120;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 0;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -314,6 +314,10 @@ bool home_dummy() {
     drive_motor(left_motor,0,false);
     drive_motor(right_motor,0,false);
     return true;
+  }
+  else if (US_amplitude < 1.5*stopping_distance) {
+    drive_motor(left_motor,200,false);
+    drive_motor(right_motor,200,false);
   }
   else {
     if (home_sweep_time == 0) {
@@ -1174,17 +1178,17 @@ void loop() {                                                    // Function tha
             robot_sub_state = 1;
           }
         }
-        if (robot_sub_state == 1){
+        else if (robot_sub_state == 1){
           if (point_towards_nearest_dummy(9000,0.8,255)) {
             robot_sub_state = 2;
           }
         }
-        if (robot_sub_state == 2) {
+        else if (robot_sub_state == 2) {
           if (home_dummy()) {
             robot_sub_state = 3;
           }
         }
-        if (robot_sub_state == 3) {
+        else if (robot_sub_state == 3) {
           if (delay_5s_start_time == 0){
             using_servos = false;
             delay_5s_start_time = tick_counter*tick_length;
