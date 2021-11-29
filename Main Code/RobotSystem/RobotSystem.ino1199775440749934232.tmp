@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 100;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 24;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -74,8 +74,6 @@ const int motor_360_speed = 255;                                 // Motor speed 
 
 unsigned long pick_up_dummy_start_time = 0;                      // Time to start picking up dummy
 unsigned long drop_off_dummy_start_time = 0;                     // Time to start dropping off dummy
-
-int proximity_counter2 = 0;
 
 bool temp_test_var1 = false;
 int temp_test_var2 = 0;
@@ -300,34 +298,15 @@ bool home_dummy() {
   US_amplitude = take_ultrasonic_reading();
 
   if (US_amplitude < stopping_distance) {
-    proximity_counter2++;
-  }
-  else {
-    proximity_counter2 = 0;
-  }
-  if (proximity_counter2 > 5) {
+    drive_motor(left_motor,0,false);
+    drive_motor(right_motor,0,false);
     return true;
   }
   else {
-    if (home_sweep_time == 0) {
-      home_sweep_time = tick_counter*tick_length;
-    }
-    else if (tick_counter*tick_length < home_sweep_time + creep_time) {
-      drive_motor(left_motor,255,false);
-      drive_motor(right_motor,255,false);
-    }
-    else if (tick_counter*tick_length < home_sweep_time + creep_time + 1000) {
-      drive_motor(left_motor,255,false);
-      drive_motor(right_motor,255,true);
-    }
-    else {
-      dummy_located = false;
-      if (point_towards_nearest_dummy(2000,0.95,255)) {
-        home_sweep_time = 0;
-      }
-    }
+    drive_motor(left_motor,255,false);
+    drive_motor(right_motor,255,false);
+    return false;
   }
-  return false;
   
 }
 
@@ -758,9 +737,7 @@ void loop() {                                                    // Function tha
     else if (robot_test_state == 24) {
       using_servos = false;
       if (home_dummy()) {
-        drive_motor(left_motor,0,false);
-        drive_motor(right_motor,0,false);
-        delay(100000);
+        delay(10000000);
       }
     }
     else if (robot_test_state == 100) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
