@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 14;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 14;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -26,7 +26,7 @@ const int TRIG_PIN = 13;                                         // TRIG and ECH
 const int ECHO_PIN = 12;
 const int IR_AMP_PIN = A3;                                       // Pin used to read the amplitude of the IR signal
 const int IR_MOD_PIN = 5;                                        // IR to detect modulation and hence identify dummeis
-const int SERVO_1_PIN = 9;                                      // Claw grab servo
+const int SERVO_1_PIN = 9;                                       // Claw grab servo
 const int SERVO_2_PIN = 8;                                       // Claw lift servo
 const int BUTTON_PIN = 11;                                       // Pin for button to start the program (not stop if pressed again!)
 
@@ -263,11 +263,11 @@ bool home_dummy() {                                              // Algorithm to
       dummy_located = false;                                     // Declare that dummy not found
     }
     else if (tick_counter*tick_length<adjust_start_time+1000) {  // For [1] second(s) after starting:
-      drive_motor(left_motor, 100, false);                       // Turn clockwise slowly
-      drive_motor(right_motor, 100, true);
+      drive_motor(left_motor, 100, true);                       // Turn clockwise slowly
+      drive_motor(right_motor, 100, false);
     }
     else if (not dummy_located) {                                // After the first sweep, start sweeping for dummy slowly and only in the small angle range
-      point_towards_nearest_dummy(2000, 0.95, 100);              // [2] second(s), High threshold, slowly
+      point_towards_nearest_dummy(1000, 0.95, 100);              // [2] second(s), High threshold, slowly
     }
     else if (dummy_located) {                                    // After finding dummy again...
       if (US_amplitude > home_final_distance) {                  // ...drive until at final distance and stop
