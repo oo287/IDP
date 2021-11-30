@@ -95,6 +95,8 @@ unsigned long turn_onto_line_timer = 0;
 
 int proximity_counter2 = 0;
 
+unsigned long reverse_again_timer = 0;
+
 bool temp_test_var1 = false;
 int temp_test_var2 = 0;
 bool temp_test_var3 = false;
@@ -1150,7 +1152,7 @@ void loop() {                                                    // Function tha
         else if (robot_sub_state == 7){
           int temp_ultrasonic = 0;
           temp_ultrasonic = take_ultrasonic_reading();
-          if (temp_ultrasonic > 10){                             // this should drive us up over the ramp and stop 50cm from end so we can sweep for dummies again.
+          if (temp_ultrasonic > 14){                             // this should drive us up over the ramp and stop 50cm from end so we can sweep for dummies again.
                                                                  // requires 3 US values under 50cm in a row to activate to avoid any random disturbance
             follow_line();
             proximity_counter_2 = 0;
@@ -1159,6 +1161,18 @@ void loop() {                                                    // Function tha
             proximity_counter_2 ++;
           }
           if (proximity_counter_2 > counter_cutoff) {
+            robot_sub_state = 8;
+          }
+        }
+        else if (robot_sub_state == 8) {
+          if (reverse_again_timer == 0) {
+            reverse_again_timer = tick_counter*tick_length;
+          }
+          else if (tick_counter*tick_length < reverse_again_timer + 2000) {
+            drive_motor(left_motor,255,true);
+            drive_motor(right_motor,255,true);
+          }
+          else {
             drive_motor(left_motor,0,false);
             drive_motor(right_motor,0,false);
             robot_sub_state = 0;
