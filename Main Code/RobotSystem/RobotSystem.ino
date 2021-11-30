@@ -71,7 +71,7 @@ unsigned long creep_time = 3000;                                 // Time that ho
 
 unsigned long turn_timer = 0;                                    // Timer used for turning 360, 180 or 90 degrees
 
-const int full_360_time = 9330.0;                                // Time taken for full 360 at set motor speed
+const int full_360_time = 9400.0;                                // Time taken for full 360 at set motor speed
 const int motor_360_speed = 255;                                 // Motor speed used for turning a full 360
 
 unsigned long pick_up_dummy_start_time = 0;                      // Time to start picking up dummy
@@ -705,7 +705,7 @@ void loop() {                                                    // Function tha
     else if (robot_test_state == 17) {                           // Test 17: Turn 180 degrees then stop and turn the red LED on
       if (tick_counter*tick_length > 500) {                      // Wait 0.5 seconds
         if (not temp_test_var4) {                                // If not stopped yet
-          temp_test_var4 = turn(180,false);                      // Turn
+          temp_test_var4 = turn(90,false);                      // Turn
         }
         else {
           digitalWrite(LED3_PIN,HIGH);                           // Turn red LED on
