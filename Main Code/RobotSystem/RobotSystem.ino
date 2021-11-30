@@ -1056,12 +1056,12 @@ void loop() {                                                    // Function tha
             robot_sub_state = 1;
           }
         }
-        if (robot_sub_state == 1){
+        else if (robot_sub_state == 1){
           if (follow_line()){                                    //drive back to start untill encounter cross roads
             robot_sub_state = 2;
           }
         }
-        if (robot_sub_state == 2){
+        else if (robot_sub_state == 2){
           if (drive_1s_timer == 0){
             drive_1s_timer = tick_counter * tick_length; 
           } 
@@ -1076,7 +1076,7 @@ void loop() {                                                    // Function tha
           }
            
         }
-        if (robot_sub_state == 3){
+        else if (robot_sub_state == 3){
           if (what_dummy_am_I == 2){
             if(turn(90, true)){                                  //turn 90 clockwise
               robot_sub_state = 4;
@@ -1088,7 +1088,7 @@ void loop() {                                                    // Function tha
             }
           }
         }
-        if (robot_sub_state == 4){
+        else if (robot_sub_state == 4){
           finished_dropping = drop_off_dummy();
           if (finished_dropping){                            //drops off red box dummy
             number_dummies_saved += 1;
@@ -1096,7 +1096,7 @@ void loop() {                                                    // Function tha
            }
          }
          
-        if (robot_sub_state == 5){
+        else if (robot_sub_state == 5){
           if (reverse_touch == 0){
             reverse_touch = tick_counter * tick_length;
           }                                                  //reverse for 2s
@@ -1109,7 +1109,7 @@ void loop() {                                                    // Function tha
           }
         }
 
-        if (robot_sub_state == 7){                               // turns the robot back onto line facing danger area
+        else if (robot_sub_state == 7){                               // turns the robot back onto line facing danger area
           if (what_dummy_am_I == 2){
             if(turn(90, true)){
               robot_sub_state = 8;
@@ -1122,7 +1122,7 @@ void loop() {                                                    // Function tha
           }
         }
 
-        if (robot_sub_state == 8){
+        else if (robot_sub_state == 8){
           int temp_ultrasonic = 0;
           temp_ultrasonic = take_ultrasonic_reading();
           if (temp_ultrasonic > 50){                             // this should drive us up over the ramp and stop 50cm from end so we can sweep for dummies again.
