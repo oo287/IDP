@@ -4,7 +4,7 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 0;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 130;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
@@ -64,12 +64,6 @@ bool finished_adjusting = false;
 
 bool hit_line_1 = false;
 
-bool turning_around = false;
-
-float percentage_of_sweep_completed = 0;
-
-bool dummy_side_right = false;                                         // False = Left, True = Right
-
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
 unsigned long delay_5s_start_time = 0;
 unsigned long reverse_3s = 0;
@@ -102,7 +96,6 @@ bool temp_test_var4 = false;
 bool temp_test_var5 = false;
 int temp_test_var6 = 0;
 int temp_test_var7 = 0;
-int temp_test_var8 = 0;
 
 
 // --------- Motor Initialisation ---------                      // --------- Motor Initialisation ---------
@@ -233,8 +226,6 @@ bool follow_line() {                                             // Function tha
                                                                  // Function to: Stop, spin on the spot, turn towards brighest dummy seen, stop again and set dummy_located = true
 bool point_towards_nearest_dummy(int sweep_time = full_360_time, float threshold = 0.7, int motor_sweep_speed = 255) {
 
-  percentage_of_sweep_completed = 0.0;
-
   if (sweep_start_time == 0 and not dummy_located) {             // If haven't started sweeping yet (first time activating function) and haven't already found dummy
     sweep_start_time = tick_counter*tick_length;                 // Set start time to current time
     max_IR_amplitude = 0;                                        // Initialise IR amplitude at 0
@@ -266,13 +257,10 @@ bool point_towards_nearest_dummy(int sweep_time = full_360_time, float threshold
         
       }
       else {                                                     // If reached cutoff (threshold*max_IR_amplitude), then declare dummy found and stop turning, reset sweep_start_time
-        percentage_of_sweep_completed = (tick_counter*tick_length - sweep_start_time - sweep_time) / float(sweep_time);
-        
         dummy_located = true;                                    // Dummy found
         sweep_start_time = 0;                                    // Reset sweep start time
         drive_motor(left_motor, 0, false);                       // Stop driving
         drive_motor(right_motor, 0, false);                      // Stop driving
-        
         return true;
         
       }
@@ -350,7 +338,34 @@ bool turn(int angle, bool clockwise = true) {                    // Turns a set 
   }
 }
 
-bool turn_onto_line(bool turn_right = true){
+//bool turn_onto_line(){
+//  read_line_sensors();
+//  if (line_1 and line_2){                                        // If left line sensor on turn to left just as shorter
+//    drive_motor(right_motor, 255, false);
+//    drive_motor(left_motor, 255, true);
+//    return false;
+//  }
+//  else if (line_3 and line_2){                                   // If right line sensor on turn right
+//    drive_motor(right_motor, 255, true);
+//    drive_motor(left_motor, 255, false);
+//    return false;
+//  }
+//  else if (not (line_1 or line_2 or line_3)){                    // Drive forward which gets you back onto line           
+//    drive_motor(right_motor, 255, false);
+//    drive_motor(left_motor, 255, false);
+//    return false;
+//  }
+//  else if ((line_2) and (not line_1) and (not line_3)){          // if this doesn't work, remember which you hit first and wait till we hit the other one
+//    drive_motor(right_motor, 0, false);
+//    drive_motor(left_motor, 0, false);
+//    return true;
+//  }
+//  else{
+//    return false;
+//  }
+//}
+
+bool turn_onto_line(){
   read_line_sensors();
   if (not (line_1 or line_2 or line_3) and turn_onto_line_timer == 0) {
     drive_motor(left_motor,255,false);
@@ -366,8 +381,8 @@ bool turn_onto_line(bool turn_right = true){
     }
     else if (tick_counter*tick_length > turn_onto_line_timer + 1499) {
       if (not line_2) {
-        drive_motor(left_motor,255,turn_right);
-        drive_motor(right_motor,255,not turn_right);
+        drive_motor(left_motor,255,true);
+        drive_motor(right_motor,255,false);
       }
       else {
         turn_onto_line_timer = 0;
@@ -777,22 +792,6 @@ void loop() {                                                    // Function tha
         }
       }
     }
-    else if (robot_test_state == 26) {
-      using_servos = true;
-      if (tick_counter*tick_length < 3000) {
-        claw_servo.write(20);
-        lift_servo.write(120);
-      }
-      else if (tick_counter*tick_length < 4000) {
-        claw_servo.write(75);
-        lift_servo.write(120);
-      }
-      else if (tick_counter*tick_length > 4000) {
-        claw_servo.write(75);
-        lift_servo.write(70);
-        Serial.println(take_ultrasonic_reading());
-      }
-    }
     else if (robot_test_state == 100) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
       if (tick_counter*tick_length < 3000) {
         if (tick_counter*tick_length % 500 < 250) {
@@ -930,7 +929,6 @@ void loop() {                                                    // Function tha
         robot_state = 3;
         robot_sub_state = 0;
         number_dummies_saved = 1;
-        dummy_side_right = false;
         
       }
       else if (not main_test_started and robot_state == 3) {
@@ -1207,12 +1205,6 @@ void loop() {                                                    // Function tha
         else if (robot_sub_state == 1){
           if (point_towards_nearest_dummy(8500,0.8,255)) {
             robot_sub_state = 2;
-            if ((int(percentage_of_sweep_completed * 10)%10)/10.0 <= 0.5) {
-              dummy_side_right = false;
-            }
-            else {
-              dummy_side_right = true;
-            }
           }
         }
         else if (robot_sub_state == 2) {
@@ -1278,9 +1270,26 @@ void loop() {                                                    // Function tha
         }
         else if (robot_sub_state == 1) {
           // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line revers
-          if (turn_onto_line(not dummy_side_right)) {
-            robot_sub_state = 0;
+          if (turn_onto_line()) {
+            robot_sub_state = 2;
+          }
+        }
+        else if (robot_sub_state == 2) {
+          drive_motor(left_motor,0,false);
+          drive_motor(right_motor,0,false);
+          digitalWrite(LED3_PIN,HIGH);
+        }
+        else if (robot_sub_state == 2){
+        // if its the white box dummy, check which way we're facing and then re-use same code as it you've just picked it up when it was already on the line
+          if (take_ultrasonic_reading() < 100){
             robot_state = 1;
+            robot_sub_state = 0;
+          }
+          else {
+            if (turn(180)){
+              robot_state = 1;
+              robot_sub_state = 0;
+            }
           }
         }
       }
