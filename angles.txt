@@ -1,0 +1,8 @@
+Angles:
+angle1 = 195 (turn around after grabbing blue/red dummy from the line)
+angle2 = 90  (turn left 90 degrees to put dummy in blue box)
+angle3 = 90  (turn right 90 degrees to put dummy in red box)
+angle4 = 85  (turn left 90 degrees to get back on line from blue box)
+angle5 = 90  (turn right 90 degrees to get back on line from red box)
+angle6 = 180 (turn back from grabbing dummy in space)
+angle7 = 170 (turn back towards home after dropping off all 3 dummies)

@@ -469,11 +469,11 @@ bool drop_off_dummy(){                                           // Drive servos
   }
   else if (tick_counter*tick_length < drop_off_dummy_start_time + 1000) {
     claw_servo.write(100);
-    lift_servo.write(120);
+    lift_servo.write(115);
   }
   else if (tick_counter*tick_length < drop_off_dummy_start_time + 2000) {
     claw_servo.write(20);
-    lift_servo.write(120);
+    lift_servo.write(115);
   }
   else if (tick_counter*tick_length < drop_off_dummy_start_time + 2500) {
     claw_servo.write(20);
@@ -1267,7 +1267,7 @@ void loop() {                                                    // Function tha
           }
         }
         else if (robot_sub_state == 1){
-          if (point_towards_nearest_dummy(8200,0.8,255)) {
+          if (point_towards_nearest_dummy(8500,0.8,255)) {
             robot_sub_state = 2;
             if ((int(percentage_of_sweep_completed * 10)%10)/10.0 <= 0.5) {
               dummy_side_right = false;
