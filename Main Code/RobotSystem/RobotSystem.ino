@@ -4,21 +4,21 @@
 
 
 // --------- Important Variables ---------                       // --------- Important Variables ---------
-int robot_test_state = 0;                                       // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
+int robot_test_state = 0;                                        // Variable to control if the robot runs a test or not. 0 = Normal, 1 = Test 1, 2 = Test 2 etc. See tests.txt for details
 int robot_state = 0;                                             // Variable to track the stage of the problem (0=start,1=got 1 dummy,2=dropped off one dummy)
 int robot_sub_state = 0;
 unsigned long tick_counter = 0;                                  // Counts the number of ticks elapsed since program started running
 unsigned const int tick_length = 20;                             // The length of one tick in milliseconds. Clock Frequency = 1/tick_length. Since IR sensor takes ~12ms, 20ms currently used
 bool program_started = false;                                    // Bool to store if the program start button has been pressed yet or not
 bool using_servos = false;                                       // Bool to track if we are using the servos
-bool main_test_started = false;
+bool main_test_started = false;                                  // Bool to track tests number 100+
 int stopping_distance = 6;                                       // Distance to stop away from dummies before grabbing (in cm)
 
-int readings_mod = 0;
+int readings_mod = 0;                                            // 3 Counters for taking a mode of the IR modulation LED input
 int readings_mix = 0;
 int readings_unm = 0;
 
-bool dummy_identity_decided = false;
+bool dummy_identity_decided = false;                             // Bool to track if the mode of IR modulation had finished and a dummy number decided
 
 // --------- Hardware Constants ---------                        // --------- Hardware Constants ---------
 const int LM_port =  3;                                          // Motor shield port that the left motor uses
@@ -45,42 +45,31 @@ int US_amplitude;                                                // Distance rec
 
 
 // --------- Logic Variables ---------                           // --------- Logic Variables ---------
-bool horizontal_line = false;
-bool finished_dropping = false;
-bool picked_up_yet = false;
-bool turned_yet = false;
-bool are_we_pointing_at_dummy = false;
+bool finished_dropping = false;                                  // Bool to track drop_off_dummy() function return state to track when dummy has been dropped off yet
+bool picked_up_yet = false;                                      // Bool to track pick_up_dummy() function return state to track when dummy has been picked up yet
 int what_dummy_am_I;                                             // The dummy that is detected (0 for line, 1 for red box, 2 for blue box)
 bool dummy_located = false;                                      // If a dummy has been spotted using IR amplitude or not
-int number_dummies_saved = 0;
-int hit_cross_roads = 0;                                         // used in test state 6 (first competition) to detect when hit cross roads and ignore it and carry on
-
-int proximity_counter = 0;
-int proximity_counter_2 = 0;
-int counter_cutoff = 3;
+int number_dummies_saved = 0;                                    // Number of dummies returned to a box
+int hit_cross_roads = 0;                                         // Used to count if a cross-roads has been crossed yet. Used in returning to home to stop after second cross-roads
 
 bool currently_adjusting = false;                                // Bool used by home_dummy() to track when the robot is currently doing an adjustment sweep
-bool finished_adjusting = false;
+bool finished_adjusting = false;                                 // Bool used by home_dummy() to track when the robot has finished doing an adjustment sweep
 
-bool hit_line_1 = false;
+float percentage_of_sweep_completed = 0;                         // Used by point_towards_nearest_dummy to track if the robot finds a dummy to its left or right by timing how long it sweeps for before locking-on
 
-bool turning_around = false;
+bool dummy_side_right = false;                                   // False = Left, True = Right. Keeps track of which side the located dummy is on
 
-float percentage_of_sweep_completed = 0;
+bool follow_line_output = false;                                 // Bool to store the value of follow_line() to not require it to be run multiple times per tick
 
-bool dummy_side_right = false;                                         // False = Left, True = Right
-
-bool follow_line_output = false;
-
-bool first_dummy_delivered = false;
+bool first_dummy_delivered = false;                              // Bool to track if the dummy in the white box has been returned or not yet. Used to know what to look for when finding the end white box again
 
 
 // --------- Timer/Timing Variables ---------                    // --------- Timer/Timing Variables ---------
-unsigned long delay_5s_start_time = 0;
-unsigned long reverse_3s = 0;
-unsigned long reverse_touch = 0;
-unsigned long drive_1s_timer = 0;
-unsigned long drive_1s_2 = 0;
+unsigned long delay_5s_start_time = 0;                           // Used to pause for 5s before grabbing each dummy
+unsigned long reverse_2s = 0;                                    // Used to reverse for 2 seconds after hitting the white box to return to the center of the search area
+unsigned long drop_off_reverse = 0;                              // Used to reverse for 1 second after dropping off dummy in red/blue box
+unsigned long drive_1s_timer = 0;                                // Used to drive 1 second more after returning to line after grabbing dummy from middle of search area
+unsigned long drive_home_timer = 0;                              // Used to drive 2.5 seconds after reaching the final box to stop within it
 unsigned long sweep_start_time = 0;                              // Timer used to time how long to sweep when searching for a dummy with IR amplitude sensor
 
 unsigned long home_sweep_time = 0;                               // Timer used to drive forwards for a fixed amount of time before each adjustment in home_dummy()
@@ -98,8 +87,6 @@ unsigned long avoid_first_sweep_time = 0;
 
 unsigned long turn_onto_line_timer = 0;
 
-int proximity_counter2 = 0;
-int proximity_counter3 = 0;
 
 unsigned long reverse_again_timer = 0;
 
@@ -115,6 +102,11 @@ int temp_test_var7 = 0;
 int temp_test_var8 = 0;
 
 int five_seconds = 3000;
+
+int proximity_counter = 0;                                       // Proximity counters are used to ignore glitch values from the US sensor (i.e. require 3 values below/above threshold in a row to confirm)
+int proximity_counter2 = 0;
+int proximity_counter3 = 0;
+int proximity_counter4 = 0;
 
 
 // --------- Angle Variables ---------                           // --------- Angle Variables ---------
@@ -313,23 +305,23 @@ bool home_dummy() {
   US_amplitude = take_ultrasonic_reading();
 
   if (US_amplitude < stopping_distance) {
-    proximity_counter2++;
-  }
-  else {
-    proximity_counter2 = 0;
-  }
-  if (proximity_counter2 > 5) {
-    drive_motor(left_motor,0,false);
-    drive_motor(right_motor,0,false);
-    return true;
-  }
-  if (US_amplitude < 1.5*stopping_distance) {
     proximity_counter3++;
   }
   else {
     proximity_counter3 = 0;
   }
   if (proximity_counter3 > 5) {
+    drive_motor(left_motor,0,false);
+    drive_motor(right_motor,0,false);
+    return true;
+  }
+  if (US_amplitude < 1.5*stopping_distance) {
+    proximity_counter4++;
+  }
+  else {
+    proximity_counter4 = 0;
+  }
+  if (proximity_counter4 > 5) {
     drive_motor(left_motor,150,false);
     drive_motor(right_motor,150,false);
   }
@@ -1013,7 +1005,7 @@ void loop() {                                                    // Function tha
         else{
           proximity_counter ++;
         }
-        if (proximity_counter > counter_cutoff) {
+        if (proximity_counter > 3) {
           drive_motor(left_motor,0,false);                                    
           drive_motor(right_motor,0,false);
           if (delay_5s_start_time == 0){
@@ -1074,8 +1066,7 @@ void loop() {                                                    // Function tha
       if ((what_dummy_am_I == 1) and robot_state == 1){          // modulated dummy going to white box from on line position, at the end of this IF statement the robot is on line facing dummy in white box
         //Serial.println(what_dummy_am_I);
         if (robot_sub_state == 0){
-          hit_line_1 = follow_line();
-          if (hit_line_1) { 
+          if (follow_line()) { 
             robot_sub_state = 1;
           }
         }
@@ -1095,17 +1086,17 @@ void loop() {                                                    // Function tha
           }
         }
         else if (robot_sub_state == 2){
-          if (reverse_3s == 0){
-            reverse_3s = tick_counter * tick_length;
+          if (reverse_2s == 0){
+            reverse_2s = tick_counter * tick_length;
           }                                                  //reverse for 2s
-          else if (tick_counter * tick_length < reverse_3s + 2000){
+          else if (tick_counter * tick_length < reverse_2s + 2000){
             drive_motor(left_motor,255,true);
             drive_motor(right_motor,255,true);
           }
           else{
             robot_state = 2;
             robot_sub_state = 0;
-            reverse_3s = 0;
+            reverse_2s = 0;
             finished_dropping = false;
             drive_motor(left_motor,0,false);
             drive_motor(right_motor,0,false);
@@ -1181,16 +1172,16 @@ void loop() {                                                    // Function tha
          }
         
         else if (robot_sub_state == 6){
-          if (reverse_touch == 0){
-            reverse_touch = tick_counter * tick_length;
+          if (drop_off_reverse == 0){
+            drop_off_reverse = tick_counter * tick_length;
           }                                                  //reverse for 0.7s
-          else if (tick_counter * tick_length < reverse_touch + 1000){
+          else if (tick_counter * tick_length < drop_off_reverse + 1000){
             drive_motor(left_motor,255,true);
             drive_motor(right_motor,255,true);
           }
           else{
             robot_sub_state = 7;
-            reverse_touch = 0;
+            drop_off_reverse = 0;
           }
         }
 
@@ -1214,17 +1205,17 @@ void loop() {                                                    // Function tha
           if (temp_ultrasonic > 14){                             // this should drive us up over the ramp and stop 50cm from end so we can sweep for dummies again.
                                                                  // requires 3 US values under 50cm in a row to activate to avoid any random disturbance
             if (follow_line()) {
-              proximity_counter_2 = 100;
+              proximity_counter2 = 100;
             }
             else {
-              proximity_counter_2 = 0;
+              proximity_counter2 = 0;
             }
           }
           else{
             follow_line();
-            proximity_counter_2 ++;
+            proximity_counter2 ++;
           }
-          if (proximity_counter_2 > counter_cutoff) {
+          if (proximity_counter2 > 3) {
             robot_sub_state = 9;
           }
         }
