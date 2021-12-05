@@ -142,7 +142,7 @@ void drive_motor(Adafruit_DCMotor* motor, int spd, bool rev) {   // Electrical f
 
   if (spd != 0) {                                                // If motor running at non-zero speed
     if (tick_counter*tick_length % 500 < 250) {                  // Use tick_counter*tick_length to set 500ms frequency for LED flashing
-      digitalWrite(LED1_PIN,HIGH);                                 // Write HIGH output to LED Pin 1 (orange LED)
+      digitalWrite(LED1_PIN,HIGH);                               // Write HIGH output to LED Pin 1 (orange LED)
     }
     else if (tick_counter*tick_length % 500 > 249) {             // If in second half of 500ms time period (since 50% duty cycle)
       digitalWrite(LED1_PIN,LOW);                                // Write LOW output to LED Pin 1 (orange LED)
@@ -589,7 +589,7 @@ void loop() {                                                    // Function tha
     }
     else if (robot_test_state == 5) {                            // Test 5: Crash into dummy. Point at nearest dummy using IR and drive forwards. don't. stop.
       if (tick_counter*tick_length > 3000) {
-        if (not temp_test_var1) {                                 // Use point_towards_nearest_dummy() until dummy_located
+        if (not temp_test_var1) {                                // Use point_towards_nearest_dummy() until dummy_located
           temp_test_var1 = point_towards_nearest_dummy(2000,0.95,255);
         }
         else {
@@ -680,8 +680,8 @@ void loop() {                                                    // Function tha
     }
     else if (robot_test_state == 14) {                           // Test 14: Locate and home dummy, then grab it.
       if (tick_counter*tick_length > 3000) {                     // Wait 3 seconds
-        if (not temp_test_var3 and temp_test_var2 == 0) {
-          temp_test_var3 = point_towards_nearest_dummy(10000,0.8,255);            // Point towards dummy, use standard settings
+        if (not temp_test_var3 and temp_test_var2 == 0) {        // Point towards dummy, use standard settings
+          temp_test_var3 = point_towards_nearest_dummy(10000,0.8,255);            
           using_servos = false;
         }
         else {
@@ -810,7 +810,7 @@ void loop() {                                                    // Function tha
         Serial.println(take_ultrasonic_reading());
       }
     }
-    else if (robot_test_state == 100) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+    else if (robot_test_state == 100) {                          // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
       if (tick_counter*tick_length < 3000) {
         if (tick_counter*tick_length % 500 < 250) {
           digitalWrite(LED3_PIN,HIGH);
@@ -833,7 +833,7 @@ void loop() {                                                    // Function tha
         digitalWrite(LED3_PIN,HIGH);
       }
     }
-    else if (robot_test_state == 110) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+    else if (robot_test_state == 110) {                          // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
       if (tick_counter*tick_length < 3000) {
         if (tick_counter*tick_length % 500 < 250) {
           digitalWrite(LED3_PIN,HIGH);
@@ -858,7 +858,7 @@ void loop() {                                                    // Function tha
         digitalWrite(LED3_PIN,HIGH);
       }
     }
-    else if (robot_test_state == 111) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+    else if (robot_test_state == 111) {                          // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
       if (tick_counter*tick_length < 3000) {
         if (tick_counter*tick_length % 500 < 250) {
           digitalWrite(LED3_PIN,HIGH);
@@ -887,7 +887,7 @@ void loop() {                                                    // Function tha
         digitalWrite(LED3_PIN,HIGH);
       }
     }
-    else if (robot_test_state == 112) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+    else if (robot_test_state == 112) {                          // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
       if (tick_counter*tick_length < 3000) {
         if (tick_counter*tick_length % 500 < 250) {
           digitalWrite(LED3_PIN,HIGH);
@@ -913,7 +913,7 @@ void loop() {                                                    // Function tha
         digitalWrite(LED3_PIN,HIGH);
       }
     }
-    else if (robot_test_state == 120) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+    else if (robot_test_state == 120) {                          // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
       if (tick_counter*tick_length < 3000) {
         if (tick_counter*tick_length % 500 < 250) {
           digitalWrite(LED3_PIN,HIGH);
@@ -938,7 +938,7 @@ void loop() {                                                    // Function tha
         digitalWrite(LED3_PIN,HIGH);
       }
     }
-    else if (robot_test_state == 130) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+    else if (robot_test_state == 130) {                          // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
       if (tick_counter*tick_length < 3000) {
         if (tick_counter*tick_length % 500 < 250) {
           digitalWrite(LED3_PIN,HIGH);
@@ -964,7 +964,7 @@ void loop() {                                                    // Function tha
         digitalWrite(LED3_PIN,HIGH);
       }
     }
-    else if (robot_test_state == 140) {                      // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
+    else if (robot_test_state == 140) {                          // Tests 100+: Running parts of the main code. The program sets all the correct state variables and leaves the testing state to run the main code                          
       if (tick_counter*tick_length < 3000) {
         if (tick_counter*tick_length % 500 < 250) {
           digitalWrite(LED3_PIN,HIGH);
@@ -1117,7 +1117,7 @@ void loop() {                                                    // Function tha
           if (drive_1s_timer == 0){
             drive_1s_timer = tick_counter * tick_length; 
           } 
-        //drive 1s forward after first finding horizontal line so that when it turns 90 it will drop into box
+                                                                 //drive 1s forward after first finding horizontal line so that when it turns 90 it will drop into box
           else if (tick_length * tick_counter < drive_1s_timer + 1000){
             follow_line();
           }
@@ -1181,7 +1181,7 @@ void loop() {                                                    // Function tha
           }
         }
 
-        else if (robot_sub_state == 7){                               // turns the robot back onto line facing danger area
+        else if (robot_sub_state == 7){                          // turns the robot back onto line facing danger area
           if (what_dummy_am_I == 2){
             if(turn(angle4, true)){
               robot_sub_state = 8;
@@ -1333,9 +1333,8 @@ void loop() {                                                    // Function tha
           }
         }
         else if (robot_sub_state == 1) {
-          // spin untill on line facing either way, if ultrasound < 1m do a U turn, if >1m go straight on, need to do spin 180 code and from the reverse position spin and go forward. also follow line revers
           if (what_dummy_am_I == 1) {
-            if (turn_onto_line(dummy_side_right)) {
+            if (turn_onto_line(dummy_side_right)) {              // Use turn onto line algorithm: Drive until on line, continue for 1s, turn the correct direction (according to dummy_side_right) until back onto line
               robot_sub_state = 0;
               robot_state = 1;
             }
